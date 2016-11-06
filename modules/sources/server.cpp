@@ -12,14 +12,23 @@ Server::~Server() {
 }
 
 void Server::listen() {
+	int activity, max;
+	struct timeval timeOut;
+	timeOut.tv_sec = 0;
+	timeOut.tv_usec = 0;
     std::cout << "Server is now listening on " <<  _sock.getPortNumber() << std::endl;
     while (true) {
+		
+	
             if (_jobs.size() < MAX_CONNECTIONS) {
                 UDPSocket clientSocket;
                 std::string msg;
+		
+		
                 if (_sock.recvFrom(clientSocket, msg) == -1) {
                     perror("Cannot recieve from the client.");
                 }
+
                 std::cout << "Client Socket: " << clientSocket.getPortNumber() << std::endl;
                 std::cout << "Messaged Received From  " << clientSocket.getHost() << ":" << clientSocket.getPortNumber() << "-> " << msg << std::endl;
                 Job *job = new Job(clientSocket);

@@ -33,7 +33,7 @@ void Client::_execute() {
     std::string input;
     std::cout << "Enter Message: " ;
     std::string msg;
-    std::cin >> input;
+    std::getline (std::cin, input, '\n');
     if (!sendMsg(input)) {
         perror("Cannot Send Message");
     }
@@ -44,7 +44,7 @@ void Client::_execute() {
     std::cout << "Message -> " << msg << " RECIEVED" << std::endl;
     _updateServerSocket(atoi(msg.c_str()), "127.0.0.1");
     std::cout << "\nEnter Message: " ;
-    while(std::cin >> input) {
+    while(std::getline (std::cin, input, '\n')) {
         std::string msg;
         if (!sendMsg(input)) {
             perror("Cannot Send Message");

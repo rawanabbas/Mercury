@@ -38,6 +38,16 @@ bool UDPSocket::sendTo(UDPSocket &sock, std::string msg) {
 
 int UDPSocket::recvFrom(UDPSocket &sock, std::string &msg) {
     socklen_t s = sizeof(sock._address);
+	int activity, max;
+	struct timeval timeOut;
+	timeOut.tv_sec = 0;
+	timeOut.tv_usec = 0;	
+	fd_set readfds;
+	FD_ZERO(&readfds);
+	FD_SET(_sock,&readfds);
+	max = _sock;
+	activity = select (max+1, &readfds, NULL, NULL, &timeOut);
+		
     if ((_bytes = ::recvfrom(_sock, _buffer, MAX_RECV, 0, (sockaddr *) &(sock._address),  &s)) <= 0) {
         perror("Cannot recieve.");
     }

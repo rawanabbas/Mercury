@@ -7,5 +7,6 @@ int main(int argc, char const *argv[]) {
     Client client("127.0.0.1", 3001);
     client.start();
     client.join();
+
     return 0;
 }

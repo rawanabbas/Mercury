@@ -13,7 +13,7 @@
 #include <netdb.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-
+#include <sys/select.h>
 
 #define END_COMMAND  "q"
 #define MAX_CONNECTIONS  5

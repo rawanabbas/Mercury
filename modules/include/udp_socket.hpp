@@ -8,10 +8,12 @@ class UDPSocket {
 private:
     char _buffer[MAX_RECV];
     int _bytes;
-    int _sock;
+    
     sockaddr_in _address;
     socklen_t _addressLength;
 public:
+
+    int _sock;
 
     UDPSocket ();
     virtual ~UDPSocket ();

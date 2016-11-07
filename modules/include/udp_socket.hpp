@@ -15,7 +15,7 @@ class UDPSocket {
 private:
     char _buffer[MAX_RECV];
     int _bytes;
-
+    fd_set _fd;
     sockaddr_in _address;
     socklen_t _addressLength;
 public:

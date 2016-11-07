@@ -1,10 +1,10 @@
 /**
- * class UDPSocket
- * Description: A class for encuaplsating and abstracting the socket object
- * Author: Group 3
- * Date: 24th October 2016
- *  Project One - CSCE 4411
- */
+* class UDPSocket
+* Description: A class for encuaplsating and abstracting the socket object
+* Author: Group 3
+* Date: 24th October 2016
+*  Project One - CSCE 4411
+*/
 #include "udp_socket.hpp"
 
 UDPSocket::UDPSocket() {
@@ -33,8 +33,6 @@ UDPSocket::~UDPSocket() {
 }
 
 bool UDPSocket::sendTo(UDPSocket &sock, std::string msg) {
-    std::cout << "Server Host: " << sock.getHost() << std::endl;
-    std::cout << "Server Port: " << sock.getPortNumber() << std::endl;
     if (::sendto(_sock, msg.c_str(), 1024, 0, (sockaddr *) &sock._address, sizeof(sock._address)) == -1) {
         perror("Cannot send to the server....");
         std::cerr << "Error: " << errno << std::endl;
@@ -45,26 +43,34 @@ bool UDPSocket::sendTo(UDPSocket &sock, std::string msg) {
 
 int UDPSocket::recvFrom(UDPSocket &sock, std::string &msg) {
     socklen_t s = sizeof(sock._address);
-	int activity, max;
-	struct timeval timeOut;
-	timeOut.tv_sec = 0;
-	timeOut.tv_usec = 1;
-	fd_set readfds;
-	FD_ZERO(&readfds);
-	FD_SET(_sock,&readfds);
-	max = _sock;
-	activity = select (max+1, &readfds, NULL, NULL, &timeOut);
+    int activity, max;
 
-    if ((_bytes = ::recvfrom(_sock, _buffer, MAX_RECV, 0, (sockaddr *) &(sock._address),  &s)) <= 0) {
-        perror("Cannot recieve.");
+    struct timeval timeOut;
+    timeOut.tv_sec = 1;
+    timeOut.tv_usec = 0;
+    FD_ZERO(&_fd);
+    FD_SET(_sock, &_fd);
+    max = _sock;
+    activity = select (max + 1, &_fd, NULL, NULL, &timeOut);
+
+    if (activity < 0) {
+        perror("Cannot Set Timeout!");
     }
-    if (_bytes > MAX_RECV) {
-        perror("Buffer Overflow!");
-        return -1;
+
+    if (FD_ISSET(_sock, &_fd)) {
+        if ((_bytes = ::recvfrom(_sock, _buffer, MAX_RECV, 0, (sockaddr *) &(sock._address),  &s)) <= 0) {
+            perror("Cannot recieve.");
+        }
+        if (_bytes > MAX_RECV) {
+            perror("Buffer Overflow!");
+            return -1;
+        } else {
+            _buffer[_bytes] = '\0';
+            msg = std::string(_buffer);
+            return _bytes;
+        }
     } else {
-        _buffer[_bytes] = '\0';
-        msg = std::string(_buffer);
-        return _bytes;
+        return -1;
     }
 }
 

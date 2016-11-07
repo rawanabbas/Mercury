@@ -12,6 +12,7 @@ Server::Server(int port) : Thread() {
     if (!_sock.create(port)) {
         throw "An error has occured while creating the server socket.";
     }
+    _isRunning = true;
 }
 
 Server::~Server() {
@@ -24,25 +25,24 @@ void Server::listen() {
     timeOut.tv_sec = 0;
     timeOut.tv_usec = 0;
     std::cout << "Server is now listening on " <<  _sock.getPortNumber() << std::endl;
-    while (true) {
-
+    std::cout << "isRunning: " << _isRunning << std::endl;
+    while (_isRunning) {
+        std::cout << "loop" << std::endl;
 
         if (_jobs.size() < MAX_CONNECTIONS) {
             UDPSocket clientSocket;
             std::string msg;
 
-
-            if (_sock.recvFrom(clientSocket, msg) == -1) {
-                perror("Cannot recieve from the client.");
+            if (_sock.recvFrom(clientSocket, msg) != -1) {
+                std::cout << "Client Socket: " << clientSocket.getPortNumber() << std::endl;
+                std::cout << "Messaged Received From  " << clientSocket.getHost() << ":" << clientSocket.getPortNumber() << "-> " << msg << std::endl;
+                Job *job = new Job(clientSocket);
+                job -> setParent((void *)this);
+                job -> setDoneCallback(_callbackWrapper, (void *)this);
+                job -> start();
+                _jobs.push_back(job);
             }
 
-            std::cout << "Client Socket: " << clientSocket.getPortNumber() << std::endl;
-            std::cout << "Messaged Received From  " << clientSocket.getHost() << ":" << clientSocket.getPortNumber() << "-> " << msg << std::endl;
-            Job *job = new Job(clientSocket);
-            job -> setParent((void *)this);
-            job -> setDoneCallback(_callbackWrapper, (void *)this);
-            job -> start();
-            _jobs.push_back(job);
         }
     }
 }
@@ -64,6 +64,8 @@ int Server::getServerPort() {
 }
 
 void Server::_terminateJob(Job *job) {
+    std::cout << "Terminating the Job!" << std::endl;
+    _isRunning = false;
     std::vector<Job*>::iterator it = std::find(_jobs.begin(), _jobs.end(), job);
     if (it != _jobs.end()) {
         (*it) -> join();

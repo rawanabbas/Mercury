@@ -58,29 +58,26 @@ void Client::_execute() {
         perror("Cannot Send Message");
     }
     std::cout << "Message -> " << msg << " SENT" << std::endl;
-    if (!recvMsg(msg)) {
-        perror("Cannot Recieve Message!");
-    }
-    std::cout << "Message -> " << msg << " RECIEVED" << std::endl;
-    _updateServerSocket(atoi(msg.c_str()), "127.0.0.1");
-    std::cout << "\nEnter Message: " ;
-    while(std::getline (std::cin, input, '\n')) {
-        std::string msg("");
-        if (!sendMsg(input)) {
-            perror("Cannot Send Message");
-        }
-        std::cout << "Message -> " << input << " SENT" << std::endl;
-        if (!recvMsg(msg)) {
-            perror("Cannot Recieve Message!");
-        }
+    if (recvMsg(msg) != -1) {
         std::cout << "Message -> " << msg << " RECIEVED" << std::endl;
-        if (msg == "q") {
-            std::cout << "TERMINATING.." << std::endl;
-            break;
-        }
+        _updateServerSocket(atoi(msg.c_str()), "127.0.0.1");
         std::cout << "\nEnter Message: " ;
+        while(std::cin >> msg) {
+            if (!sendMsg(msg)) {
+                perror("Cannot Send Message");
+            }
+            std::cout << "Message -> " << msg << " SENT" << std::endl;
+            if (recvMsg(msg) != -1) {
+                std::cout << "Message -> " << msg << " RECIEVED" << std::endl;
+                if (msg == "q") {
+                    std::cout << "TERMINATING.." << std::endl;
+                    break;
+                }
+            }
+            std::cout << "\nEnter Message: " ;
+        }
+        std::cout << "After loop." << std::endl;
     }
-    std::cout << "After loop." << std::endl;
 }
 
 void Client::run () {

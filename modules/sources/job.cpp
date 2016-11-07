@@ -36,14 +36,15 @@ void Job::run() {
     std::cout << "Sending: " << std::to_string(_serverSocket.getPortNumber()) << std::endl;
     std::locale l;
     while(_isRunning) {
-        _serverSocket.recvFrom(_clientSocket, msg);
-        std::cout << "Message recieved: " << msg << std::endl;
-        if (msg == END_COMMAND) {
-            std::cout << "Exiting From " << _clientSocket.getHost() << ": " << std::to_string(_clientSocket.getPortNumber()) << std::endl;
-            _serverSocket.sendTo(_clientSocket, "q");
-            _isRunning = false;
-        } else {
-            _serverSocket.sendTo(_clientSocket, msg + " Confirmed!");
+        if (_serverSocket.recvFrom(_clientSocket, msg) != -1) {
+            std::cout << "Message recieved: " << msg << std::endl;
+            if (msg == END_COMMAND) {
+                std::cout << "Exiting From " << _clientSocket.getHost() << ": " << std::to_string(_clientSocket.getPortNumber()) << std::endl;
+                _serverSocket.sendTo(_clientSocket, "q");
+                _isRunning = false;
+            } else {
+                _serverSocket.sendTo(_clientSocket, msg + " Confirmed!");
+            }
         }
     }
 }

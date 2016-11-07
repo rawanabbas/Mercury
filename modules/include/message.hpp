@@ -1,3 +1,11 @@
+/**
+ * class Message
+ * This class is meant to for packaging the packets sent from the server and to the client or vice versa to this Message
+ * \note Not complete yet
+ * Author: Group 3
+ * Date: 6th November 2016
+ *  Project One - CSCE 4411
+ */
 #ifndef MESSAGE_HPP
 #define MESSAGE_HPP
 

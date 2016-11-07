@@ -1,3 +1,10 @@
+/**
+ * class Thread
+ * Description: A class for encuaplsating and abstracting the thread object using the linux library pthread
+ * Author: Group 3
+ * Date: 24th October 2016
+ *  Project One - CSCE 4411
+ */
 #ifndef THREAD_HPP
 #define THREAD_HPP
 

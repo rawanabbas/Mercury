@@ -1,3 +1,10 @@
+/**
+ * Main File for testing the Client
+ * Author: Group 3
+ * Date: 24th October 2016
+ *  Project One - CSCE 4411
+ */
+
 #include "stdfax.h"
 #include "client.hpp"
 #include "udp_socket.hpp"

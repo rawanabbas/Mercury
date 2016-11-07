@@ -1,5 +1,11 @@
+/**
+ * Main File for testing the Server
+ * Author: Group 3
+ * Date: 24th October 2016
+ *  Project One - CSCE 4411
+ */
+
 #include "stdfax.h"
-// #include "socket.hpp"
 #include "server.hpp"
 
 int main(int argc, char const *argv[]) {

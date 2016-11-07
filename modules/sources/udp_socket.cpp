@@ -1,3 +1,10 @@
+/**
+ * class UDPSocket
+ * Description: A class for encuaplsating and abstracting the socket object
+ * Author: Group 3
+ * Date: 24th October 2016
+ *  Project One - CSCE 4411
+ */
 #include "udp_socket.hpp"
 
 UDPSocket::UDPSocket() {
@@ -41,13 +48,13 @@ int UDPSocket::recvFrom(UDPSocket &sock, std::string &msg) {
 	int activity, max;
 	struct timeval timeOut;
 	timeOut.tv_sec = 0;
-	timeOut.tv_usec = 1;	
+	timeOut.tv_usec = 1;
 	fd_set readfds;
 	FD_ZERO(&readfds);
 	FD_SET(_sock,&readfds);
 	max = _sock;
 	activity = select (max+1, &readfds, NULL, NULL, &timeOut);
-		
+
     if ((_bytes = ::recvfrom(_sock, _buffer, MAX_RECV, 0, (sockaddr *) &(sock._address),  &s)) <= 0) {
         perror("Cannot recieve.");
     }

@@ -1,3 +1,10 @@
+/**
+ * class Client
+ * Description: A class for encuaplsating and abstracting the client object
+ * Author: Group 3
+ * Date: 24th October 2016
+ *  Project One - CSCE 4411
+ */
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 

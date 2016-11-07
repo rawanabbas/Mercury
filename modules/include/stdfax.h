@@ -1,3 +1,9 @@
+/**
+ * A file that contains all the needed library in one place to avoid various design issues.
+ * Author: Group 3
+ * Date: 24th October 2016
+ */
+
 #include <iostream>
 #include <string>
 #include <string.h>

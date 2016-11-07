@@ -1,3 +1,10 @@
+/**
+ * class Server
+ * Description: A class for encuaplsating and abstracting the server object, it inherits from thread
+ * Author: Group 3
+ * Date: 24th October 2016
+ *  Project One - CSCE 4411
+ */
 #include "server.hpp"
 
 Server::Server(int port) : Thread() {

@@ -28,7 +28,7 @@ void Server::listen() {
                 if (_sock.recvFrom(clientSocket, msg) == -1) {
                     perror("Cannot recieve from the client.");
                 }
-
+	
                 std::cout << "Client Socket: " << clientSocket.getPortNumber() << std::endl;
                 std::cout << "Messaged Received From  " << clientSocket.getHost() << ":" << clientSocket.getPortNumber() << "-> " << msg << std::endl;
                 Job *job = new Job(clientSocket);

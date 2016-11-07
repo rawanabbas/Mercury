@@ -41,7 +41,7 @@ int UDPSocket::recvFrom(UDPSocket &sock, std::string &msg) {
 	int activity, max;
 	struct timeval timeOut;
 	timeOut.tv_sec = 0;
-	timeOut.tv_usec = 0;	
+	timeOut.tv_usec = 1;	
 	fd_set readfds;
 	FD_ZERO(&readfds);
 	FD_SET(_sock,&readfds);

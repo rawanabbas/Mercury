@@ -31,9 +31,17 @@ void Client::_updateServerSocket(int port, std::string host) {
 
 void Client::_execute() {
     std::string input;
-    std::cout << "Enter Message: " ;
+    std::string filePath;
+    std::cout << "Enter Input File name: " ;
+    std::cin >> filePath;
     std::string msg;
-    std::getline (std::cin, input, '\n');
+    _inputFile.open(filePath.c_str());
+    if (_inputFile.fail())
+    {
+    	std::cout << "Could not open file.\n";
+	return;
+    }
+    std::getline (_inputFile, input, '#');
     if (!sendMsg(input)) {
         perror("Cannot Send Message");
     }

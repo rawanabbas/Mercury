@@ -12,6 +12,7 @@ private:
     UDPSocket _sock;
     UDPSocket _serverSocket;
     char _buffer[MAX_RECV];
+    std::ifstream _inputFile;
 
     void _execute();
     void _updateServerSocket(int port, std::string host);

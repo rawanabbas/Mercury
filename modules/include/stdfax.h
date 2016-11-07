@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <pthread.h>
 #include <ctime>
+#include <fstream>
 
 #include <netdb.h>
 #include <sys/socket.h>

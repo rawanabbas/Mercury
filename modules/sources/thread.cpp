@@ -1,11 +1,10 @@
 #include "thread.hpp"
 
-Thread::Thread() : _isRunning(false), _isPending(true) {
+Thread::Thread() : _isRunning(false), _isPending(true), _doneCallback(NULL) {
 
 }
 
 Thread::~Thread() {
-
 }
 
 void Thread::start() {
@@ -15,7 +14,9 @@ void Thread::start() {
 void * Thread::_run(void *thisThread) {
     Thread* threadPtr = (Thread*) thisThread;
     threadPtr->run();
-    (*(threadPtr->_doneCallback))(threadPtr, threadPtr -> _parent);
+    if (threadPtr->_doneCallback != NULL) {
+        (*(threadPtr->_doneCallback))(threadPtr, threadPtr -> _parent);
+    }
     pthread_exit(0);
 }
 

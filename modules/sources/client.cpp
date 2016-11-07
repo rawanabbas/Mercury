@@ -13,7 +13,7 @@ Client::Client(std::string host, int serverPort, int port) : Thread() {
 }
 
 Client::~Client() {
-    
+    std::cout << "Destructing the client!" << std::endl;
 }
 
 bool Client::sendMsg(std::string msg) {
@@ -32,20 +32,25 @@ void Client::_updateServerSocket(int port, std::string host) {
 void Client::_execute() {
     std::string input;
     std::string filePath;
-    std::cout << "Enter Input File name: " ;
-    std::cin >> filePath;
+    // std::cout << "Enter Input File name: " ;
+    std::cout << "Enter Message: " ;
+    // std::cin >> filePath;
     std::string msg;
-    _inputFile.open(filePath.c_str());
-    if (_inputFile.fail())
-    {
-    	std::cout << "Could not open file.\n";
-	return;
-    }
-    std::getline (_inputFile, input, '#');
-    if (!sendMsg(input)) {
+    std::cin >> msg;
+    // _inputFile.open(filePath.c_str());
+    // if (_inputFile.fail())
+    // {
+    	// std::cout << "Could not open file.\n";
+	// return;
+    // }
+    // std::getline (_inputFile, input, '#');
+    // if (!sendMsg(input)) {
+    //     perror("Cannot Send Message");
+    // }
+    if (!sendMsg(msg)) {
         perror("Cannot Send Message");
     }
-    std::cout << "Message -> " << input << " SENT" << std::endl;
+    std::cout << "Message -> " << msg << " SENT" << std::endl;
     if (!recvMsg(msg)) {
         perror("Cannot Recieve Message!");
     }
@@ -53,7 +58,7 @@ void Client::_execute() {
     _updateServerSocket(atoi(msg.c_str()), "127.0.0.1");
     std::cout << "\nEnter Message: " ;
     while(std::getline (std::cin, input, '\n')) {
-        std::string msg;
+        std::string msg("");
         if (!sendMsg(input)) {
             perror("Cannot Send Message");
         }
@@ -62,11 +67,13 @@ void Client::_execute() {
             perror("Cannot Recieve Message!");
         }
         std::cout << "Message -> " << msg << " RECIEVED" << std::endl;
-        if (msg == "Terminated!") {
+        if (msg == "q") {
+            std::cout << "TERMINATING.." << std::endl;
             break;
         }
         std::cout << "\nEnter Message: " ;
     }
+    std::cout << "After loop." << std::endl;
 }
 
 void Client::run () {

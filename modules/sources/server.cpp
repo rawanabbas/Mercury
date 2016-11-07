@@ -12,31 +12,31 @@ Server::~Server() {
 }
 
 void Server::listen() {
-	int activity, max;
-	struct timeval timeOut;
-	timeOut.tv_sec = 0;
-	timeOut.tv_usec = 0;
+    int activity, max;
+    struct timeval timeOut;
+    timeOut.tv_sec = 0;
+    timeOut.tv_usec = 0;
     std::cout << "Server is now listening on " <<  _sock.getPortNumber() << std::endl;
     while (true) {
-		
-	
-            if (_jobs.size() < MAX_CONNECTIONS) {
-                UDPSocket clientSocket;
-                std::string msg;
-		
-		
-                if (_sock.recvFrom(clientSocket, msg) == -1) {
-                    perror("Cannot recieve from the client.");
-                }
-	
-                std::cout << "Client Socket: " << clientSocket.getPortNumber() << std::endl;
-                std::cout << "Messaged Received From  " << clientSocket.getHost() << ":" << clientSocket.getPortNumber() << "-> " << msg << std::endl;
-                Job *job = new Job(clientSocket);
-                job -> setParent((void *)this);
-                job -> setDoneCallback(_callbackWrapper, (void *)this);
-                job -> start();
-                _jobs.push_back(job);
+
+
+        if (_jobs.size() < MAX_CONNECTIONS) {
+            UDPSocket clientSocket;
+            std::string msg;
+
+
+            if (_sock.recvFrom(clientSocket, msg) == -1) {
+                perror("Cannot recieve from the client.");
             }
+
+            std::cout << "Client Socket: " << clientSocket.getPortNumber() << std::endl;
+            std::cout << "Messaged Received From  " << clientSocket.getHost() << ":" << clientSocket.getPortNumber() << "-> " << msg << std::endl;
+            Job *job = new Job(clientSocket);
+            job -> setParent((void *)this);
+            job -> setDoneCallback(_callbackWrapper, (void *)this);
+            job -> start();
+            _jobs.push_back(job);
+        }
     }
 }
 
@@ -59,7 +59,7 @@ int Server::getServerPort() {
 void Server::_terminateJob(Job *job) {
     std::vector<Job*>::iterator it = std::find(_jobs.begin(), _jobs.end(), job);
     if (it != _jobs.end()) {
-        (*it) -> exit();
+        (*it) -> join();
         _jobs.erase(it);
     }
 }

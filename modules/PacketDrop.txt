@@ -1,0 +1,2 @@
+rawan@rawan-pc:~/Downloads/packETH-1.8$ sudo tc qdisc add dev lo root handle 1:0 netem loss 50%
+rawan@rawan-pc:~/Downloads/packETH-1.8$ sudo tc qdisc del dev lo root

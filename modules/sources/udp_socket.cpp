@@ -46,8 +46,8 @@ int UDPSocket::recvFrom(UDPSocket &sock, std::string &msg) {
     int activity, max;
 
     struct timeval timeOut;
-    timeOut.tv_sec = 1;
-    timeOut.tv_usec = 0;
+    timeOut.tv_sec = 0;
+    timeOut.tv_usec = 1;
     FD_ZERO(&_fd);
     FD_SET(_sock, &_fd);
     max = _sock;
@@ -56,11 +56,11 @@ int UDPSocket::recvFrom(UDPSocket &sock, std::string &msg) {
     if (activity < 0) {
         perror("Cannot Set Timeout!");
     }
-
     if (FD_ISSET(_sock, &_fd)) {
         if ((_bytes = ::recvfrom(_sock, _buffer, MAX_RECV, 0, (sockaddr *) &(sock._address),  &s)) <= 0) {
             perror("Cannot recieve.");
         }
+        std::cout << "Bytes recieved: " << _bytes << std::endl;
         if (_bytes > MAX_RECV) {
             perror("Buffer Overflow!");
             return -1;

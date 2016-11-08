@@ -25,10 +25,8 @@ void Server::listen() {
     timeOut.tv_sec = 0;
     timeOut.tv_usec = 0;
     std::cout << "Server is now listening on " <<  _sock.getPortNumber() << std::endl;
-    std::cout << "isRunning: " << _isRunning << std::endl;
     while (_isRunning) {
-        std::cout << "loop" << std::endl;
-
+        std::cout << "Looop" << std::endl;
         if (_jobs.size() < MAX_CONNECTIONS) {
             UDPSocket clientSocket;
             std::string msg;

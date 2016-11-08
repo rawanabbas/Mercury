@@ -56,17 +56,19 @@ void Client::_execute() {
     // }
     if (!sendMsg(msg)) {
         perror("Cannot Send Message");
+    } else {
+        std::cout << "Message -> " << msg << " SENT" << std::endl;
     }
-    std::cout << "Message -> " << msg << " SENT" << std::endl;
     if (recvMsg(msg) != -1) {
         std::cout << "Message -> " << msg << " RECIEVED" << std::endl;
-        _updateServerSocket(atoi(msg.c_str()), "127.0.0.1");
+        _updateServerSocket(atoi(msg.c_str()), "10.40.34.2");
         std::cout << "\nEnter Message: " ;
         while(std::cin >> msg) {
             if (!sendMsg(msg)) {
                 perror("Cannot Send Message");
+            } else {
+                std::cout << "Message -> " << msg << " SENT" << std::endl;
             }
-            std::cout << "Message -> " << msg << " SENT" << std::endl;
             if (recvMsg(msg) != -1) {
                 std::cout << "Message -> " << msg << " RECIEVED" << std::endl;
                 if (msg == "q") {

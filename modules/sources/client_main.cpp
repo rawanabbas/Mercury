@@ -11,7 +11,7 @@
 
 int main(int argc, char const *argv[]) {
     std::cout << "Client is Now Sending ..." << std::endl;
-    Client client("127.0.0.1", 3001);
+    Client client("10.40.34.2", 3001);
     client.start();
     client.join();
 

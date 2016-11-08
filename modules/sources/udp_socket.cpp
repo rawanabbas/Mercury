@@ -33,7 +33,9 @@ UDPSocket::~UDPSocket() {
 }
 
 bool UDPSocket::sendTo(UDPSocket &sock, std::string msg) {
-    if (::sendto(_sock, msg.c_str(), 1024, 0, (sockaddr *) &sock._address, sizeof(sock._address)) == -1) {
+    socklen_t length = sizeof(sockaddr_in);
+    std::cout << (sockaddr *) &sock._address << std::endl;
+    if (::sendto(_sock, msg.c_str(), 1024, 0, (sockaddr *) &sock._address, length) == -1) {
         perror("Cannot send to the server....");
         std::cerr << "Error: " << errno << std::endl;
         return false;
@@ -76,14 +78,10 @@ int UDPSocket::recvFrom(UDPSocket &sock, std::string &msg) {
 
 bool UDPSocket::connect(UDPSocket &sock, std::string host, int port) {
     sock._address.sin_family = AF_INET;
-    sock._address.sin_addr.s_addr = INADDR_ANY;
+    sock._address.sin_addr.s_addr = inet_addr(host.c_str());
     sock._address.sin_port = htons(port);
-    int status = inet_pton(AF_INET, host.c_str(), &_address.sin_addr);
-    if (status == 0) {
-        std::cout << "Invalid host conversion: " << host.c_str() << std::endl;
-    }
     bzero(&(sock._address.sin_zero), 8);
-    return (status != EAFNOSUPPORT);
+    return true;
 }
 
 int UDPSocket::getPortNumber() {

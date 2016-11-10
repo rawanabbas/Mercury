@@ -7,7 +7,7 @@ class Heartbeat {
 private:
     /* data */
 public:
-    Heartbeat (arguments);
+    Heartbeat ();
     virtual ~Heartbeat ();
 };
 

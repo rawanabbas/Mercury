@@ -15,7 +15,7 @@ class SocketException {
 private:
     /* data */
 public:
-    SocketException (arguments);
+    SocketException ();
     virtual ~SocketException ();
 
 };

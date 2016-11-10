@@ -7,7 +7,7 @@ class Peer {
 private:
     /* data */
 public:
-    Peer (arguments);
+    Peer ();
     virtual ~Peer ();
 
 };

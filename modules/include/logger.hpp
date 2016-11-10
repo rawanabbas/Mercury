@@ -13,8 +13,8 @@ class Logger {
 private:
     /* data */
 public:
-    Message (arguments);
-    virtual ~Message ();
+    Logger ();
+    virtual ~Logger ();
 
 };
 

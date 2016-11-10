@@ -7,7 +7,7 @@ class ConnectionManager {
 private:
     /* data */
 public:
-    ConnectionManager (arguments);
+    ConnectionManager ();
     virtual ~ConnectionManager ();
 
 };

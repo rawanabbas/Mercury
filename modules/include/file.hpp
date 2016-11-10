@@ -7,7 +7,7 @@ class File {
 private:
     /* data */
 public:
-    File (arguments);
+    File ();
     virtual ~File ();
 
 };

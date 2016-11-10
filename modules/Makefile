@@ -1,8 +1,8 @@
 #################################################################################################################################
-# Makefile
-# Author: Group 3
-# Date: 6th November 2016
-# CSCE 4411 - Project One
+# Makefile                                                                                                                      #
+# Author: Group 3                                                                                                               #
+# Date: 6th November 2016                                                                                                       #
+# CSCE 4411 - Project One Mercury                                                                                               #
 #################################################################################################################################
 .PHONY: all server client clean
 SRC_DIR = ./sources

@@ -7,3 +7,11 @@
  *  Project One - CSCE 4411
  */
 #include "logger.hpp"
+
+Logger::Logger() {
+
+}
+
+Logger::~Logger() {
+    
+}

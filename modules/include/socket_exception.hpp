@@ -6,3 +6,18 @@
  * Date: 24th October 2016
  *  Project One - CSCE 4411
  */
+#ifndef SOCKET_EXCEPTION_HPP
+#define SOCKET_EXCEPTION_HPP
+
+#include "stdfax.h"
+
+class SocketException {
+private:
+    /* data */
+public:
+    SocketException (arguments);
+    virtual ~SocketException ();
+
+};
+
+#endif //SOCKET_EXCEPTION_HPP

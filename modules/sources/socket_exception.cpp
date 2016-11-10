@@ -6,3 +6,12 @@
  * Date: 24th October 2016
  *  Project One - CSCE 4411
  */
+#include "socket_exception.hpp"
+
+SocketException::SocketException() {
+
+}
+
+SocketException::~SocketException() {
+
+}

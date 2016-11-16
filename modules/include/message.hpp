@@ -30,7 +30,7 @@ public:
     size_t getMessageSize();
 
     char * serialize();
-    Message deserialize(char * serialized);
+    void deserialize(char * serialized);
 
     virtual ~Message ();
 };

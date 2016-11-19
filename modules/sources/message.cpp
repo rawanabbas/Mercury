@@ -103,11 +103,7 @@ char * Message::serialize() {  //Convert input to Base64 Data stream
 void Message::deserialize(char * serialized)
 {
     int mType;
-   // std::string encodingTable = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-   // std::string decodingTable;
-   //std::string unserialized = "";
-   // decodingTable.resize(256);
-   // std::string msgTemp;
+    std:: string msgTemp;
     std::stringstream ss(serialized);
     std::string tokens;
     
@@ -117,7 +113,7 @@ void Message::deserialize(char * serialized)
             ss >> _size;
         
         if (tokens == "M:")
-            ss >> _msg;
+            ss >> msgTemp;
   
         if (tokens == "MT:")
          {  	
@@ -147,27 +143,77 @@ void Message::deserialize(char * serialized)
          if (tokens == "T:")
             ss >> _timestamp;
     }
-    
-  /*  for (int i = 0 ; i <  64; i++)
-        decodingTable[(unsigned char)encodingTable[i]] = i;
-      
-    
-    int j = 0 ;
-    for (int i = 0 ; i < msgTemp.size();)
-    {
-        uint32_t a = msgTemp[i] == '=' ? 0 & i++ : decodingTable[i++];
-        uint32_t b = msgTemp[i] == '=' ? 0 & i++ : decodingTable[i++];
-        uint32_t c = msgTemp[i] == '=' ? 0 & i++ : decodingTable[i++];
-        uint32_t d = msgTemp[i] == '=' ? 0 & i++ : decodingTable[i++];
-        
-        
-        uint32_t triple = (a << 3 * 6) + (b << 2 * 6) + (c << 1 * 6) + (d << 0 * 6);
-       
-        unserialized = unserialized + (triple>> 2* 8)& 0xFF;
-        unserialized = unserialized + (triple>> 1* 8)& 0xFF;
-        unserialized = unserialized + (triple>> 0* 8)& 0xFF;  
-        
-        
-    }
-    _msg = unserialized;*/
+	//Base64 to string
+    	std::string unserialized = "";
+	std::string encodingTable = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+	std::vector <int> temp;
+	std::string bin = "";
+	for (int i = 0 ; i < msgTemp.size(); i++)
+	{
+		if (msgTemp[i] != '=')
+			temp.push_back(encodingTable.find(msgTemp[i]));
+		else
+			temp.push_back (0);
+	}
+
+	for (int i = 0; i < temp.size(); i++)
+	{
+		std::string tempString= "";
+		int digit = temp[i];
+		int counter = 0;
+
+		while (digit != 0)
+		{
+			
+			tempString += to_string(digit & 1);
+			digit = digit >> 1;
+			counter++;
+		}
+		while (counter < 6)
+		{
+			tempString += '0';
+			counter++;
+		}
+		counter = 0;
+		for (int j = 0; j < tempString.size() / 2; j++)
+	{
+		swap(tempString[j], tempString[tempString.size() - 1 - j]);
+	}
+		bin += tempString;	
+	}
+
+	if (msgTemp[msgTemp.size() -1] == '=')
+	{
+		bin.erase (bin.size() -2 , 2);
+		if (msgTemp[msgTemp.size() - 2] == '=')
+			bin.erase (bin.size() -2 , 2);
+	}
+
+	
+	cout << bin << endl;
+	string octet = "";
+	int counter = 0 ;
+	for (int i = 0 ; i < bin.size(); i++)
+	{
+		octet += bin[i];
+		counter++;
+		if (counter == 8)
+		{
+			counter = 0;
+			int ascii = 0;
+			for (int j = octet.size() - 1; j >= 0; j--)
+			{
+				ascii = ascii | ((int(octet[j]) - 48) << counter);
+				counter++;
+			}
+			octet = "";
+			cout << ascii << endl;
+			if (ascii != 0)
+				unserialized += char(ascii);
+			counter = 0;
+		}
+
+	}
+  
+    _msg = unserialized;
 }

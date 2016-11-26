@@ -25,7 +25,6 @@ Job::~Job() {
 
 
 bool Job::_sendInfo () {
-
     if (!_serverSocket.sendMessageTo(_clientSocket, Message(toString(_serverSocket.getPortNumber()).c_str (), MessageType::Info))) {
         perror("Cannot Send the New Socket!");
         return false;
@@ -43,8 +42,8 @@ int Job::getJobId() const {
 void Job::_openFile(Message message) {
     std::cout << "Opening File ..." << std::endl;
     char details[MAX_RECV];
-    strcpy(details, message.getMessage());
-    std::cout << "File Details: " << details << std::endl;
+    //TO-DO: CHANGE TO STRING.
+    strcpy(details, message.getMessage().c_str());
     char fileName[100];
     int mode;
     sscanf(details, "%s FM: %d", fileName, &mode);
@@ -60,9 +59,9 @@ void Job::_openFile(Message message) {
 void Job::_createFile(Message &message) {
     char details[MAX_RECV];
     memset(details, 0, MAX_RECV);
-    strcpy(details, message.getMessage());
+    //TO-DO: CHANGE TO STRING.
+    strcpy(details, message.getMessage().c_str());
     std::cout << "Creating File ..." << std::endl;
-    std::cout << "File Details: " << details << std::endl;
     char fileName[100];
     int mode;
     sscanf(details, "N: %s FM: %d", fileName, &mode);
@@ -83,9 +82,9 @@ void Job::_createFile(Message &message) {
 void Job::_readFile(Message &message) {
     char details[MAX_RECV];
     memset(details, 0, MAX_RECV);
-    strcpy(details, message.getMessage());
+    //TO-DO: CHANGE TO STRING.
+    strcpy(details, message.getMessage().c_str());
     std::cout << "Reading File ..." << std::endl;
-    std::cout << "File Details: " << details << std::endl;
     char fileName[100];
     int mode;
     sscanf(details, "%s FM: %d", fileName, &mode);
@@ -97,26 +96,22 @@ void Job::_readFile(Message &message) {
     file.setMode((FileMode)mode);
     buffer = file.read();
     message.setMessageType(MessageType::Reply);
-    message.setMessage(buffer.c_str());
+    message.setMessage(buffer);
     message.setReplyType(ReplyType::Success);
 }
 
 void Job::_writeFile(Message &message) {
     std::cout << "------------------------WRITE FILE-------------------------" << std::endl;
     std::cout << "Writing File ..." << std::endl;
+    std::cout << "Message Size: " << message.getMessageSize() << std::endl;
     char details[MAX_RECV];
-    strcpy(details, message.getMessage());
-    std::cout << "File Details: " << details << std::endl;
-    char fileName[100], txt[MAX_RECV];
-    int mode;
-    sscanf(details, "N: %s FM: %d W: %1024c", fileName, &mode, txt);
-    std::cout << "===========================++++++++++++++++++++++++++++++++++++++++++" << std::endl;
-    std::cout << "THE TEXT: " << std::endl;
-    std::cout << txt << std::endl;
-    std::cout << "===========================++++++++++++++++++++++++++++++++++++++++++" << std::endl;
-
+    //TO-DO: CHANGE TO STRING.
+    memcpy(details, message.getMessage().c_str(), message.getMessageSize());
+    char fileName[100];
+    int mode, decodedLength, bytesRead;
+    sscanf(details, "N: %s FM: %d L: %d W: %n", fileName, &mode, &decodedLength, &bytesRead);
     File file;
-    FileStatus status = file.write(fileName, txt);
+    FileStatus status = file.write(fileName, std::string(details + bytesRead, message.getMessageSize() - (bytesRead)), decodedLength);
     if (status == FileStatus::WriteOperationSuccess) {
         message.setMessage("Text is written to file!");
         message.setReplyType(ReplyType::Success);
@@ -174,8 +169,6 @@ void Job::_listen() {
         std::cout << "Job listening loop..." << std::endl;
         if (_serverSocket.recvFrom(_clientSocket, serializedMsg) != -1) {
             Message message = Message::deserialize(serializedMsg);
-            std::cout << "Message recieved: " << message.getMessage() << std::endl;
-            std::cout << "Message (Serialized)recieved: " << serializedMsg << std::endl;
             if (_handleMessage(message) == JobState::Exit) {
                 break;
             } else {

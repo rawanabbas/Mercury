@@ -1,33 +1,49 @@
 /**
- * class Message
- * This class is meant to for packaging the packets sent from the server and to the client or vice versa to this Message
- * \note Not complete yet
- * Author: Group 3
- * Date: 6th November 2016
- *  Project One - CSCE 4411
- */
+* class Message
+* This class is meant to for packaging the packets sent from the server and to the client or vice versa to this Message
+* Author: Group 3
+* Date: 6th November 2016
+*  Project One - CSCE 4411
+*/
 #include "message.hpp"
 
+//Static Definitions
+const std::string Message::SizeToken = "S:";
+const std::string Message::MessageTypeToken = "MT:";
+const std::string Message::MessageToken = "M:";
+const std::string Message::TimestampToken = "T:";
+const std::string Message::ReplyTypeToken = "RT:";
+const std::string Message::RPCToken = "R:";
+const std::string Message::UserIdToken = "UID:";
+
 Message::Message() {
-    _timestamp =  std::time(nullptr);;
+    _timestamp =  std::time(nullptr);
 }
 
-Message::Message(const char *msg, MessageType type, RPC rpcId, ReplyType replyType) {
+Message::Message(std::string msg, MessageType type, RPC rpcId, ReplyType replyType) {
     setMessage(msg);
     setMessageType(type);
     setRpcId(rpcId);
     setReplyType(replyType);
-    _timestamp =  std::time(nullptr);;
+    _timestamp =  std::time(nullptr);
+}
+
+Message::Message(std::string msg, MessageType type, RPC rpcId, ReplyType replyType, time_t timestamp) {
+    setMessage(msg);
+    setMessageType(type);
+    setRpcId(rpcId);
+    setReplyType(replyType);
+    _timestamp =  timestamp;
 }
 
 
-char * Message::getMessage() {
-    return &_msg[0];
+std::string Message::getMessage() {
+    return _msg;
 }
 
-void Message::setMessage(const char *msg) {
-    strcpy(_msg, msg);
-    _size = strlen(msg);
+void Message::setMessage(std::string msg) {
+    _msg = msg;
+    _size = msg.length();
 }
 
 MessageType Message::getMessageType() {
@@ -43,18 +59,58 @@ size_t Message::getMessageSize() {
 }
 
 std::string Message::serialize() {
-    std::string serialized;
-    serialized = "S: " + std::to_string(_size) + " MT: " + std::to_string((int)_type) + " R: " + std::to_string ((int)_rpcId) + " RT: " + std::to_string((int)_replyType) + " M: " + std::string(_msg);
+    /*Rawan's Part
+     std::string serialized;
+     serialized = "S: " + std::to_string(_size) + " MT: " + std::to_string((int)_type) + " R: " + std::to_string ((int)_rpcId) + " RT: " + std::to_string((int)_replyType) + " M: " + std::string(_msg);
+     return serialized; */
+
+    std::string serialized = "";
+    Decoder::encode(_msg, &serialized);
+    serialized = SizeToken + " " + std::to_string(_size) + " " + MessageToken + " " + serialized + " " + MessageTypeToken + " "
+                 + std::to_string((int)_type) + " " + TimestampToken + " " + std::to_string(_timestamp) + " " + RPCToken + " " +
+                 std::to_string((int)_rpcId) + " " + ReplyTypeToken + " " + std::to_string((int)_replyType);
     return serialized;
 }
 
+void Message::_parseMessage(std::string serialized, ReplyType &reply, RPC &rpc, MessageType &type, int &size, time_t &timestamp, std::string &encodedMsg) {
+    std::stringstream ss(serialized);
+    std::string token;
+
+    while (ss >> token) {
+        if (token == SizeToken) {
+            ss >> size;
+        } else if (token == MessageToken) {
+            ss >> encodedMsg;
+        } else if (token == MessageTypeToken) {
+            int msgType;
+            ss >> msgType;
+            type = (MessageType) msgType;
+        } else if (token == TimestampToken) {
+            ss >> timestamp;
+        } else if (token == RPCToken) {
+            int rpcId;
+            ss >> rpcId;
+            rpc = (RPC) rpcId;
+        } else if (token == ReplyTypeToken) {
+            int replyType;
+            ss >> replyType;
+            reply = (ReplyType)replyType;
+        }
+    }
+}
+
 Message Message::deserialize(std::string serialized) {
-    std::cout << "MESSAGE: deserialize(): " << serialized << std::endl;
-    int size, type, rpcId = 1, replyType = 2;
-    char msg [MAX_RECV];
-    sscanf(serialized.c_str(), "S: %d MT: %d R: %d RT: %d M: %1024c", &size, &type, &rpcId, &replyType, msg);
-    std::cout << "Deserialized Message: " << msg << std::endl;
-    return Message(msg, (MessageType) type, (RPC) rpcId, (ReplyType) replyType);
+    ReplyType reply;
+    RPC rpc;
+    MessageType type;
+    int size;
+    time_t timestamp;
+    std::string encodedMsg;
+    std::string unserialized("");
+    std::cout <<"Serialize in desrialize: " << serialized << std::endl;
+    _parseMessage(serialized, reply, rpc, type, size, timestamp, encodedMsg);
+    Decoder::decode(encodedMsg, &unserialized);
+    return Message(unserialized, type, rpc, reply, timestamp);
 }
 
 RPC Message::getRpcId() const {

@@ -28,3 +28,4 @@
 #define MAX_RECV  1024
 #define SUCCESS 200
 #define ERROR 400
+#define MAX_READ 600

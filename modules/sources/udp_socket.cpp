@@ -34,10 +34,7 @@ bool UDPSocket::create(int port) {
 
 
 bool UDPSocket::sendTo(UDPSocket &sock, std::string msg) {
-    std::cout << "UDPSocket: Sending " << msg << std::endl;
     socklen_t length = sizeof(sockaddr_in);
-    std::cout << "Server IP: " << sock.getHost() << ":" << sock.getPortNumber() << std::endl;
-    std::cout << "Client IP: " << getHost() << ":" << getPortNumber() << std::endl;
     if (::sendto(_sock, msg.c_str(), msg.length() + 1, 0, (sockaddr *) &sock._address, length) == -1) {
         perror("Cannot send to the server....");
         std::cerr << "Error: " << errno << std::endl;
@@ -48,12 +45,10 @@ bool UDPSocket::sendTo(UDPSocket &sock, std::string msg) {
 }
 
 bool UDPSocket::sendMessageTo(UDPSocket &sock, Message message) {
-    std::cout << "Serialized Message: " << message.serialize() << std::endl;
     return sendTo(sock, message.serialize());
 }
 
 int UDPSocket::recvFrom(UDPSocket &sock, std::string &msg) {
-    std::cout << "UDPSocket: " << "recvFrom" << std::endl; 
     socklen_t s = sizeof(sock._address);
     if ((_bytes = ::recvfrom(_sock, _buffer, MAX_RECV, 0, (sockaddr *) &(sock._address),  &s)) <= 0) {
         perror("Cannot recieve.");

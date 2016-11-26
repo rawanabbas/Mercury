@@ -10,6 +10,7 @@
 #define MESSAGE_HPP
 
 #include "stdfax.h"
+#include "decoder.hpp"
 
 enum class MessageType {
     Request,
@@ -34,21 +35,34 @@ enum class ReplyType {
     NoReply
 };
 
-
 class Message {
 private:
+    //Tokens:
+    static const std::string SizeToken;
+    static const std::string MessageTypeToken;
+    static const std::string MessageToken;
+    static const std::string TimestampToken;
+    static const std::string ReplyTypeToken;
+    static const std::string RPCToken;
+    static const std::string UserIdToken;
+
+    //Private Variables
     MessageType _type;
-    char _msg[MAX_RECV];
+    std::string _msg;
     std::time_t _timestamp;
     RPC _rpcId;
     ReplyType _replyType;
     size_t _size;
-public:
-    Message ();
-    Message (const char * msg, MessageType type = MessageType::Undefined, RPC rpcId = RPC::Undefined, ReplyType replyType = ReplyType::NoReply);
 
-    char * getMessage();
-    void setMessage(const char *msg);
+    //Private Functions
+    static void _parseMessage(std::string serialized, ReplyType &reply, RPC &rpc, MessageType &type, int &size, time_t &timestamp, std::string &encodedMsg);
+public:
+
+    Message ();
+    Message (std::string msg, MessageType type = MessageType::Undefined, RPC rpcId = RPC::Undefined, ReplyType replyType = ReplyType::NoReply);
+    Message (std::string msg, MessageType type, RPC rpcId, ReplyType replyType, time_t timestamp);
+    std::string getMessage();
+    void setMessage(std::string);
 
     MessageType getMessageType();
     void setMessageType(MessageType type);
@@ -65,8 +79,6 @@ public:
     void setReplyType(const ReplyType &replyType);
 
     virtual ~Message ();
-    int getTest() const;
-    void setTest(int value);
 };
 
 #endif // MESSAGE_HPP

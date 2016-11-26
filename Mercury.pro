@@ -30,12 +30,14 @@ SOURCES += main.cpp\
     modules/sources/server_main.cpp \
     modules/sources/socket_exception.cpp \
     modules/sources/thread.cpp \
-    modules/sources/udp_socket.cpp
+    modules/sources/udp_socket.cpp \
+    modules/sources/decoder.cpp
 
 HEADERS  += mainwindow.h \
     modules/include/stdfax.h \
     modules/include/client.hpp \
     modules/include/connection_manager.hpp \
+    modules/include/decoder.hpp \
     modules/include/file.hpp \
     modules/include/heartbeat.hpp \
     modules/include/job.hpp \

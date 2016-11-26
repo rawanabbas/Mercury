@@ -24,6 +24,14 @@ void File::setFd(int fd) {
     _fd = fd;
 }
 
+bool File::lock() {
+    //TODO
+}
+
+bool File::unlock() {
+    //TODO
+}
+
 File::File(bool local, std::string dir):_isLocal(local), _dir(dir) {
     _id++;
 }
@@ -74,15 +82,15 @@ FileStatus File::open(std::string name, FileMode mode) {
     _isLocal = true;
     _mode = mode;
     std::string path = _dir + name;
-    std::cout << "Path: " << path << std::endl;
-    int fd = ::open(path.c_str(), O_RDWR, (int)_mode);
+//    std::cout << "Path: " << path << std::endl;
+    int fd = ::open(path.c_str(), O_RDWR | O_APPEND, (int)_mode);
     if (fd < 0) {
         perror("Cannot Open File.");
         _status = FileStatus::OpenOperationFailed;
         return _status;
     } else {
         _fd = fd;
-        std::cout << "FD: " << fd;
+//        std::cout << "FD: " << fd << std::endl;
         _status = FileStatus::Opened;
         return _status;
     }
@@ -133,25 +141,42 @@ std::string File::read() {
             return "";
         }
     }
-    std::cout << "Reading From " << _fd << "..." << std::endl;
-    int bytes;
-    char buffer[MAX_RECV];
-    bytes = ::read(_fd, &buffer, MAX_RECV);
+    int bytes, size = 0;
+    char buffer[MAX_READ];
+    bytes = ::read(_fd, &buffer, MAX_READ);
     if (bytes == -1) {
         perror("Error Reading From File!");
     } else if (bytes == 0) {
         _isEOF = true;
+    } else {
+        _isEOF = false;
+        size = size + bytes;
     }
+ /*   std::string strBuffer;
+     while ((bytes = ::read(_fd, &buffer, MAX_READ))) {
+        if (bytes == -1) {
+            perror("Error Reading From File!");
+        } else if (bytes == 0) {
+            _isEOF = true;
+        } else {
+            size = size + bytes;
+        }
+        strBuffer = strBuffer + buffer;
+    }
+    if (bytes == -1) {
+        perror("Error Reading From File!");
+    } else if (bytes == 0) {
+        _isEOF = true;
+    }*/
     std::cout << "Bytes Read: " << bytes << std::endl;
-    std::cout << std::string(buffer) << std::endl;
-    return std::string(buffer);
+    std::cout << "Size Read: " << size << std::endl;
+    return std::string(buffer, size);
 }
 
 FileStatus File::rread(UDPSocket server) {
     std::cout << "Remote Read.." << std::endl;
     std::string str = _name + " FM: " + std::to_string((int)FileMode::ReadOnly);
-    std::cout << "File: rread: Commad: " << str << std::endl;
-    Message msg(str.c_str(), MessageType::Request, RPC::ReadFile);
+    Message msg(str, MessageType::Request, RPC::ReadFile);
     if (!_sock.sendMessageTo(server, msg)) {
         _status = FileStatus::ReadOperationFailed;
         return _status;
@@ -165,8 +190,6 @@ FileStatus File::rread(UDPSocket server) {
         } else {
             std::cout << "recvFrom succeed!" << std::endl;
             Message message = Message::deserialize(serialized);
-            std::cout << "Message Type Recieved: " << (int)message.getMessageType() << std::endl;
-            std::cout << "Message Reply Type Recieved: " << (int)message.getReplyType() << std::endl;
             if (message.getMessageType() == MessageType::Reply && message.getReplyType() == ReplyType::Success) {
                 //TODO: Get buffer from message;
                 _status = FileStatus::ReadOperationSuccess;
@@ -190,8 +213,28 @@ FileStatus File::write(std::string str) {
             return FileStatus::WriteOperationFailed;
         }
     }
-    std::cout << "write(): fd: " << _fd << std::endl;
-    int bytes = ::write(_fd, str.c_str(), str.length());
+    int bytes = ::pwrite(_fd, str.c_str(), str.length(), 0);
+    if (bytes == -1) {
+        perror("An error has occured while writing to the file.");
+        return FileStatus::WriteOperationFailed;
+    } else if (bytes == 0) {
+        _isEOF = true;
+    } else {
+        _isEOF = false;
+    }
+    return FileStatus::WriteOperationSuccess;
+}
+
+FileStatus File::write(std::string str, unsigned int length) {
+    _mode = FileMode::ReadWrite;
+    if (_status != FileStatus::Opened) {
+        FileStatus status = open(_name, _mode);
+        if(status != FileStatus::Opened) {
+            perror("Cannot Open the File!");
+            return FileStatus::WriteOperationFailed;
+        }
+    }
+    int bytes = ::pwrite(_fd, str.c_str(), length, 0);
     if (bytes == -1) {
         perror("An error has occured while writing to the file.");
         return FileStatus::WriteOperationFailed;
@@ -201,9 +244,9 @@ FileStatus File::write(std::string str) {
     return FileStatus::WriteOperationSuccess;
 }
 
-FileStatus File::write(std::string name, std::string str) {
+FileStatus File::write(std::string name, std::string str, unsigned int length) {
     _name = name;
-    return write(str);
+    return write(str, length);
 }
 
 FileStatus File::rwrite(std::string name, std::string txt, UDPSocket server) {
@@ -212,10 +255,8 @@ FileStatus File::rwrite(std::string name, std::string txt, UDPSocket server) {
 }
 
 FileStatus File::rwrite(std::string txt, UDPSocket server) {
-    std::cout << "The Name: " << _name << std::endl;
-    std::string str = "N: " + _name + " FM: " + std::to_string((int)FileMode::ReadOnly) + " W: " + txt;
-    str[str.length()] = '\0';
-    Message msg(str.c_str(), MessageType::Request, RPC::WriteToFile);
+    std::string str = "N: " + _name + " FM: " + std::to_string((int)FileMode::ReadOnly) + " L: " + std::to_string(txt.length()) + " W: " + txt;
+    Message msg(str, MessageType::Request, RPC::WriteToFile);
     if (!_sock.sendMessageTo(server, msg)) {
         _status = FileStatus::WriteOperationFailed;
         return _status;

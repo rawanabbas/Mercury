@@ -14,7 +14,7 @@ int main(int argc, char const *argv[]) {
         std::cerr << "Usage: " << argv[0] << " <server_ip> <port>" << std::endl;
         exit(1);
     }
-    std::cout << "Client is Now Sending ..." << std::endl;
+    std::cout << "Hello! Let's Do This! " << std::endl;
     Client client("127.0.0.1", 3001);
     client.start();
     client.join();

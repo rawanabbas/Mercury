@@ -47,27 +47,37 @@ public:
     std::string read();
     FileStatus rread(UDPSocket server);
     FileStatus write(std::string str);
-    FileStatus write(std::string name, std::string str);
+    FileStatus write(std::string str, unsigned int length);
+    FileStatus write(std::string name, std::string str, unsigned int length);
     FileStatus rwrite(std::string name, std::string txt, UDPSocket server);
     FileStatus rwrite(std::string txt, UDPSocket server);
     FileStatus close();
     FileStatus rclose();
 
+    bool _lock();
+    bool _unlock();
+
     void setClientSocket(UDPSocket sock);
+
     static int getId();
     static void setId(int id);
+
     bool isLocal() const;
     bool isOpen() const;
-    FileStatus getStatus() const;
-    FileMode getMode() const;
-    void setMode(FileMode mode);
-    std::string getName() const;
-    void setName(const std::string &name);
     bool isEOF() const;
 
-    virtual ~File ();
-    int getFd() const;
+    FileStatus getStatus() const;
 
+    FileMode getMode() const;
+    void setMode(FileMode mode);
+
+    std::string getName() const;
+    void setName(const std::string &name);
+
+    int getFd() const;
     void setFd(int fd);
+
+    virtual ~File ();
+
 };
 #endif //FILE_HPP

@@ -24,6 +24,7 @@ SERVER_OBJS = \
 	$(OBJ_DIR)/message.o \
 	$(OBJ_DIR)/file.o \
 	$(OBJ_DIR)/server.o \
+	$(OBJ_DIR)/decoder.o \
 	$(OBJ_DIR)/server_main.o
 
 CLIENT_OBJS = \
@@ -33,6 +34,7 @@ CLIENT_OBJS = \
 	$(OBJ_DIR)/message.o \
 	$(OBJ_DIR)/job.o \
 	$(OBJ_DIR)/file.o \
+	$(OBJ_DIR)/decoder.o \
 	$(OBJ_DIR)/client_main.o
 
 APP_OBJS = \
@@ -43,6 +45,7 @@ APP_OBJS = \
 	$(OBJ_DIR)/client.o \
 	$(OBJ_DIR)/message.o \
 	$(OBJ_DIR)/file.o \
+	$(OBJ_DIR)/decoder.o \
 	$(OBJ_DIR)/heartbeat.o \
 	$(OBJ_DIR)/app.o
 

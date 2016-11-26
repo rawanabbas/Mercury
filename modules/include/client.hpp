@@ -36,6 +36,7 @@ protected:
     UDPSocket _sock;
     UDPSocket _serverSocket;
     char _buffer[MAX_RECV];
+
     void _updateServerSocket(int port, std::string host);
     bool _sendMessage(Message message);
     bool _send(std::string msg);
@@ -43,6 +44,10 @@ protected:
     bool _createFile();
     bool _createFile(File remoteFile);
     bool _createFile(File remoteFile, std::string fileName);
+    void _readFile();
+    void _sendFile();
+    void _writeFile();
+    void _handleFile(std::string msg);
     bool _receiveWithTimeout(std::string &msg);
     void _exit(std::string msg);
     void _ping(std::string msg);

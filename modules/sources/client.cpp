@@ -20,7 +20,6 @@ Client::Client(std::string host, int serverPort, int port) : Thread() {
 }
 
 Client::~Client() {
-    std::cout << "Destructing the client!" << std::endl;
 }
 
 bool Client::_sendMessage(Message msg) {
@@ -65,24 +64,23 @@ void Client::_exit(std::string msg)
     }
 }
 
-void Client::_ping(std::string msg)
+void Client::_ping(std::string serializedMsg)
 {
     MessageType type = MessageType::Ping;
-    Message message(strdup(msg.c_str()), type);
+    Message message(serializedMsg, type);
     if (!_sendMessage(message)) {
         perror("Cannot Send Message.");
     } else {
-        std::cout << "Message: -> " << msg << " SENT" << std::endl;
         std::cout << "Now recieving..." << std::endl;
-        if (_receive(msg) != -1) {
-            Message message = Message::deserialize(msg);
+        if (_receive(serializedMsg) != -1) {
+            Message message = Message::deserialize(serializedMsg);
             if (message.getMessageType() == MessageType::Info) {
                 std::cout << "Updated Server Socket Info: " << message.getMessage() << std::endl;
-                _updateServerSocket(atoi(message.getMessage()), _serverSocket.getHost());
+                _updateServerSocket(atoi(message.getMessage().c_str()), _serverSocket.getHost());
             } else if (message.getMessageType() == MessageType::Pong) {
-                std::cout << "Pong Message -> " << msg << " RECIEVED" << std::endl;
+                std::cout << "Pong Message -> " << message.getMessage() << " RECIEVED" << std::endl;
             } else {
-                std::cout << "Unkown Message Type has been recieved:" << msg <<" !" << std::endl;
+                std::cout << "Unkown Message Type has been recieved:" << serializedMsg <<" !" << std::endl;
             }
         }
     }
@@ -153,6 +151,82 @@ bool Client::_createFile(File remoteFile, std::string fileName) {
     }
 }
 
+void Client::_readFile()
+{
+    std::string fileName;
+    std::cout << "Enter File Name: ";
+    std::cin >> fileName;
+    File file;
+    file.setName(fileName);
+    FileStatus status = file.rread(_serverSocket);
+    if (status == FileStatus::ReadOperationSuccess) {
+        std::cout << "File is read!" << std::endl;
+    } else {
+        std::cout << "Read Operation Status: " << (int) status << std::endl;
+    }
+}
+
+void Client::_sendFile()
+{
+    std::string fileName, buffer;
+    std::cout << "Enter File Name: ";
+    std::cin >> fileName;
+    File remoteFile;
+    if(_createFile(remoteFile, "server/" + fileName)) {
+        File file;
+        file.open(fileName, FileMode::ReadOnly);
+        FileStatus status;
+        while (!file.isEOF()) {
+            buffer = file.read();
+            std::cout << "Buffer Size: " << buffer.length() << std::endl;
+            status = remoteFile.rwrite("server/" + fileName, buffer, _serverSocket);
+            if (status != FileStatus::WriteOperationSuccess) {
+                std::cout << "Couldn't send file!" << std::endl;
+                break;
+            }
+        }
+        if (status == FileStatus::WriteOperationSuccess) {
+            std::cout << "File is sent!" << std::endl;
+        }
+    } else {
+        std::cout << "Couldn't send file!" << std::endl;
+    }
+}
+
+void Client::_writeFile()
+{
+    std::string fileName, txt;
+    std::cout << "Enter File Name: ";
+    std::cin >> fileName;
+    std::cout << "Enter some text to write: ";
+    std::cin >> txt;
+    File file;
+    FileStatus status = file.rwrite(fileName, txt, _serverSocket);
+    if (status == FileStatus::WriteOperationSuccess) {
+        std::cout << "Write To File Success!" << std::endl;
+    } else {
+        std::cout << "Write To File Failure!" << std::endl;
+    }
+}
+
+void Client::_handleFile(std::string msg)
+{
+    std::cout << "What do you want to do with the file? (s) send file (r) remote read file (o) open remote file (w) write to remote file." << std::endl;
+    std::cout << "Command: ";
+    std::cin >> msg;
+    if (msg == std::string(1, (char)Commands::ReadFile)) {
+        _readFile();
+    } else if (msg == std::string(1, (char)Commands::OpenFile)) {
+        _openFile();
+    } else if (msg == std::string(1, (char)Commands::CreateFile)){
+        _createFile();
+    } else if (msg == std::string(1, (char)Commands::WriteFile)) {
+        _writeFile();
+    } else if (msg == std::string(1, (char)Commands::SendFile)) {
+        _sendFile();
+    }
+}
+
 void Client::_execute() {
     while(true) {
         std::cout << "Enter Message: " ;
@@ -169,60 +243,7 @@ void Client::_execute() {
             std::cout << "---------------------------PING----------------------------" << std::endl;
         } else if (msg == std::string(1, (char)Commands::File)) {
             std::cout << "---------------------------FILE----------------------------" << std::endl;
-            std::cout << "What do you want to do with the file? (s) send file (r) remote read file (o) open remote file (w) write to remote file." << std::endl;
-            std::cout << "Command: ";
-            std::cin >> msg;
-            if (msg == std::string(1, (char)Commands::ReadFile)) {
-                std::string fileName;
-                std::cout << "Enter File Name: ";
-                std::cin >> fileName;
-                File file;
-                file.setName(fileName);
-                FileStatus status = file.rread(_serverSocket);
-                if (status == FileStatus::ReadOperationSuccess) {
-                    std::cout << "File is read!" << std::endl;
-                } else {
-                    std::cout << "Read Operation Status: " << (int) status << std::endl;
-                }
-            } else if (msg == std::string(1, (char)Commands::OpenFile)) {
-                _openFile();
-            } else if (msg == std::string(1, (char)Commands::CreateFile)){
-                _createFile();
-
-            } else if (msg == std::string(1, (char)Commands::WriteFile)) {
-                std::string fileName, txt;
-                std::cout << "Enter File Name: ";
-                std::cin >> fileName;
-                std::cout << "Enter some text to write: ";
-                std::cin >> txt;
-//                getline(std::cin, txt, '\n');
-                std::cout << "You entered " << txt << std::endl;
-                File file;
-                FileStatus status = file.rwrite(fileName, txt, _serverSocket);
-                if (status == FileStatus::WriteOperationSuccess) {
-                    std::cout << "Write To File Success!" << std::endl;
-                } else {
-                    std::cout << "Write To File Failure!" << std::endl;
-                }
-            } else if (msg == std::string(1, (char)Commands::SendFile)) {
-                std::string fileName, buffer;
-                std::cout << "Enter File Name: ";
-                std::cin >> fileName;
-                File remoteFile;
-                if(_createFile(remoteFile, "server/" + fileName)) {
-                    File file;
-                    file.open(fileName, FileMode::ReadOnly);
-                    buffer = file.read();
-                    FileStatus status = remoteFile.rwrite("server/" + fileName, buffer, _serverSocket);
-                    if (status == FileStatus::WriteOperationSuccess) {
-                        std::cout << "File is sent!" << std::endl;
-                    } else {
-                        std::cout << "Couldn't send file!" << std::endl;
-                    }
-                } else {
-                    std::cout << "Couldn't send file!" << std::endl;
-                }
-            }
+            _handleFile(msg);
             std::cout << "---------------------------FILE----------------------------" << std::endl;
         }
     }

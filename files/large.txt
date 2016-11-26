@@ -1,0 +1,34 @@
+Lorem Ipsum: Quality typographic filler text for webmasters
+
+The dummy copy at this site is made from a dictionary of 500 words from Cicero's original source and the text fragments traditionally added. We use a lexical scheme to ensure a grammatically correct look and feel. This avoids repetitions, unintentional humor, and structures considered non-idiomatic for standard lipsum filler text. This generator doesn't just add chunks of predefined text with a limited choice of words.
+
+Besides providing lipsum in exotic charsets and languages, we provide Japanese lipsum with an adequate ratio of kanji, kana, hiragana, and rōmaji. Japanese, Chinese, and Korean dummy copy apply basic rules of grammar and orthography to prevent inadequacies. Lorem Ipsum is needed for web design, web pages, website templates and CMS.
+
+Japanese Lorem ipsum, variant 1
+
+Japanese greeking text in variant 1 is based on the kanji frequency count at tidraso.co.uk and includes about 50% kanji, 25% hiragana, 20% katakana and 5% roman numerals and punctuation. Katakana and hiragana cluster in strings between 1 to 4 chars at random points in each paragraph. Hiragana occurs more often at the end of sentences, rather in clumps of 1 to 4 chars rather than just single chars. Katakana is very unlikely to appear as a single character in Japanese text, but hiragana could. Exclamation and question marks are 'double-byte', not standard ascii ones.
+
+Japanese Lorem Ipsum, variant 2
+
+This version is adapted from an algorithm by Chris Moore, corrected for some punctuation issues.
+
+Japanese Lorem Ipsum, variant 3
+
+This is based on Jugemu, a Japanese folktale with a humorous repetition of a ridiculously long name. It is often used in training sessions for Rakugo entertainers.
+
+Russian (Cyrillic), Greek, Armenian Lorem Ipsum
+
+All of the above are transliterations of the classic Lorem ipsum, letter by letter or its closest approximation.
+
+Lorem Ipsum dummy text based on artificial languages
+
+This applies to Esperanto, Interlingua, Quenya, Slovio, Sona, Tokipona, Volapük. As hardly anyone actually speaks them their use should be innocuous. The dictionaries are based on the coresponding Wikipedia articles. l33tspeak is a mildly humorous alternative alphabet and used mostly on the Internet.
+
+Randomized dummy text
+
+by this text-generator is suitable for greeking, typesetting, layouts for websites, and WYSIWYG Web development, either Lorem Ipsum style or in other languages/charsets. We provide information on Lorem Ipsum, aka. Lipsum, its application and etymology, whether for print, typesetting or web design, placeholders, and copyfitting text for desktop publishing.
+
+Typographic filler text generators are available for these languages:
+
+
+Arabic, Armenian, Georgian, Chinese, Esperanto, Greek, Hebrew, Hindi, Interlingua, Japanese (1), Japanese (2), Japanese (Jugemu), Korean (1), Korean (2), L33tspeak, Latin, Letzebuergesch, Morsecode, Quenya, Russian, Slovio, Sona, Tokipona, Volapük

@@ -12,6 +12,13 @@
 #include "stdfax.h"
 #include "udp_socket.hpp"
 #include "thread.hpp"
+#include "message.hpp"
+#include "file.hpp"
+
+enum class JobState {
+    Running,
+    Exit
+};
 
 class Job : public Thread {
 private:
@@ -19,6 +26,16 @@ private:
     UDPSocket _clientSocket;
     UDPSocket _serverSocket;
     void *_parent;
+    Message _msg;
+
+    bool _sendInfo();
+    void _listen();
+    void _openFile(Message message);
+    void _createFile(Message &message);
+    void _readFile(Message &message);
+    void _writeFile(Message &message);
+    JobState _handleMessage(Message message);
+
 public:
     Job (UDPSocket sock);
     int getJobId() const;

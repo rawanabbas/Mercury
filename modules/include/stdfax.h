@@ -1,5 +1,5 @@
 /**
- * A file that contains all the needed library in one place to avoid various design issues.
+ * A file that contains all the needed libraries in one place to avoid various design issues.
  * Author: Group 3
  * Date: 24th October 2016
  */
@@ -7,6 +7,7 @@
 #include <iostream>
 #include <string>
 #include <string.h>
+#include <sstream>
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
@@ -16,7 +17,7 @@
 #include <pthread.h>
 #include <ctime>
 #include <fstream>
-
+#include <unistd.h>
 #include <netdb.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>

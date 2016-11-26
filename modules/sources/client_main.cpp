@@ -10,8 +10,12 @@
 #include "udp_socket.hpp"
 
 int main(int argc, char const *argv[]) {
+    if (argc < 3) {
+        std::cerr << "Usage: " << argv[0] << " <server_ip> <port>" << std::endl;
+        exit(1);
+    }
     std::cout << "Client is Now Sending ..." << std::endl;
-    Client client("10.40.34.2", 3001);
+    Client client("127.0.0.1", 3001);
     client.start();
     client.join();
 

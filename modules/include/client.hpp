@@ -11,25 +11,46 @@
 #include "stdfax.h"
 #include "udp_socket.hpp"
 #include "thread.hpp"
+#include "message.hpp"
+#include "file.hpp"
+
+enum class Commands : char {
+    Exit = 'q',
+    File = 'f',
+    SendFile = 's',
+    ReadFile = 'r',
+    WriteFile = 'w',
+    OpenFile = 'o',
+    CreateFile = 'c',
+    Text = 't',
+    Ping = 'p'
+};
 
 class Client : public Thread {
-private:
 
+private:
     static int _id;
+    void _execute();
+
+protected:
     UDPSocket _sock;
     UDPSocket _serverSocket;
     char _buffer[MAX_RECV];
-    std::ifstream _inputFile;
-
-    void _execute();
     void _updateServerSocket(int port, std::string host);
-
+    bool _sendMessage(Message message);
+    bool _send(std::string msg);
+    bool _receive(std::string &msg);
+    bool _createFile();
+    bool _createFile(File remoteFile);
+    bool _createFile(File remoteFile, std::string fileName);
+    bool _receiveWithTimeout(std::string &msg);
+    void _exit(std::string msg);
+    void _ping(std::string msg);
+    void _openFile();
 public:
     Client (std::string hostname, int serverPort, int port = 0);
     virtual ~Client ();
 
-    bool recvMsg(std::string &msg);
-    bool sendMsg(std::string msg);
     void run();
 };
 

@@ -9,10 +9,11 @@
 #define UDPSOCKET_HPP
 
 #include "stdfax.h"
-
+#include "message.hpp"
 
 class UDPSocket {
 private:
+    int _sock;
     char _buffer[MAX_RECV];
     int _bytes;
     fd_set _fd;
@@ -20,16 +21,16 @@ private:
     socklen_t _addressLength;
 public:
 
-    int _sock;
-
-    UDPSocket ();
+    UDPSocket (int port = 0);
     virtual ~UDPSocket ();
-
     bool create(int port = 0);
-    bool sendTo(UDPSocket& sock, std::string msg);
-    int recvFrom(UDPSocket& sock, std::string &msg);
 
+    bool sendTo(UDPSocket& sock, std::string msg);
+    bool sendMessageTo(UDPSocket& sock, Message message);
+    int recvFrom(UDPSocket& sock, std::string &msg);
+    int recvWithTimeout(UDPSocket& sock, std::string &msg);
     bool connect(UDPSocket &sock, std::string host, int port);
+
     bool isValid();
     int getPortNumber();
     std::string getHost();

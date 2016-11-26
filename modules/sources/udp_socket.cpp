@@ -7,17 +7,19 @@
 */
 #include "udp_socket.hpp"
 
-UDPSocket::UDPSocket() {
-}
-
-bool UDPSocket::create(int port) {
+UDPSocket::UDPSocket(int port) {
     if ((_sock = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
         perror("An error has occured while creating a socket.");
-        return false;
     } else {
         _address.sin_family = AF_INET;
         _address.sin_port = htons(port);
         _address.sin_addr.s_addr = INADDR_ANY;
+    }
+}
+
+bool UDPSocket::create(int port) {
+    if (isValid()) {
+        _address.sin_port = htons(port);
         if (::bind(_sock, (sockaddr *) &_address, sizeof(_address)) == -1) {
             perror("An error has occured while binding the port.");
             return false;
@@ -25,37 +27,59 @@ bool UDPSocket::create(int port) {
         _addressLength = sizeof(_address);
         getsockname(_sock, (sockaddr *) &_address, &_addressLength);
         return true;
+    } else {
+        return false;
     }
 }
 
-UDPSocket::~UDPSocket() {
-
-}
 
 bool UDPSocket::sendTo(UDPSocket &sock, std::string msg) {
+    std::cout << "UDPSocket: Sending " << msg << std::endl;
     socklen_t length = sizeof(sockaddr_in);
-    std::cout << (sockaddr *) &sock._address << std::endl;
-    if (::sendto(_sock, msg.c_str(), 1024, 0, (sockaddr *) &sock._address, length) == -1) {
+    std::cout << "Server IP: " << sock.getHost() << ":" << sock.getPortNumber() << std::endl;
+    std::cout << "Client IP: " << getHost() << ":" << getPortNumber() << std::endl;
+    if (::sendto(_sock, msg.c_str(), msg.length() + 1, 0, (sockaddr *) &sock._address, length) == -1) {
         perror("Cannot send to the server....");
         std::cerr << "Error: " << errno << std::endl;
         return false;
+    } else {
+        return true;
     }
-    return true;
+}
+
+bool UDPSocket::sendMessageTo(UDPSocket &sock, Message message) {
+    std::cout << "Serialized Message: " << message.serialize() << std::endl;
+    return sendTo(sock, message.serialize());
 }
 
 int UDPSocket::recvFrom(UDPSocket &sock, std::string &msg) {
+    std::cout << "UDPSocket: " << "recvFrom" << std::endl; 
     socklen_t s = sizeof(sock._address);
-    int activity, max;
+    if ((_bytes = ::recvfrom(_sock, _buffer, MAX_RECV, 0, (sockaddr *) &(sock._address),  &s)) <= 0) {
+        perror("Cannot recieve.");
+    }
+    std::cout << "Bytes recieved: " << _bytes << std::endl;
+    if (_bytes > MAX_RECV) {
+        perror("Buffer Overflow!");
+        return -1;
+    } else {
+        _buffer[_bytes] = '\0';
+        msg = std::string(_buffer);
+        return _bytes;
+    }
+
+}
+
+int UDPSocket::recvWithTimeout(UDPSocket& sock, std::string &msg) {
+    socklen_t s = sizeof(sock._address);
 
     struct timeval timeOut;
     timeOut.tv_sec = 0;
     timeOut.tv_usec = 1;
     FD_ZERO(&_fd);
     FD_SET(_sock, &_fd);
-    max = _sock;
-    activity = select (max + 1, &_fd, NULL, NULL, &timeOut);
 
-    if (activity < 0) {
+    if (select (_sock + 1, &_fd, NULL, NULL, &timeOut) < 0) {
         perror("Cannot Set Timeout!");
     }
     if (FD_ISSET(_sock, &_fd)) {
@@ -84,6 +108,7 @@ bool UDPSocket::connect(UDPSocket &sock, std::string host, int port) {
     return true;
 }
 
+
 int UDPSocket::getPortNumber() {
     return ntohs(_address.sin_port);
 }
@@ -100,11 +125,15 @@ bool UDPSocket::isValid() {
 
 void UDPSocket::updateSocketInfo(int port, std::string host) {
     _address.sin_family = AF_INET;
-    _address.sin_addr.s_addr = INADDR_ANY;
+    _address.sin_addr.s_addr = inet_addr(host.c_str());
     _address.sin_port = htons(port);
     int status = inet_pton(AF_INET, host.c_str(), &_address.sin_addr);
     if (status == 0) {
         std::cout << "Invalid host conversion: " << host.c_str() << std::endl;
     }
     bzero(&(_address.sin_zero), 8);
+}
+
+UDPSocket::~UDPSocket() {
+
 }

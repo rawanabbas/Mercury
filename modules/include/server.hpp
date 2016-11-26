@@ -12,6 +12,7 @@
 #include "udp_socket.hpp"
 #include "thread.hpp"
 #include "job.hpp"
+#include "message.hpp"
 
 class Server : public Thread {
 private:

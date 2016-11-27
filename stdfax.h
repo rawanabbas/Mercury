@@ -16,15 +16,11 @@
 #include <pthread.h>
 #include <ctime>
 #include <fstream>
-#include <map>
-#include <sqlite3.h>
 
 #include <netdb.h>
-#include <map>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <sys/select.h>
-#include <sys/file.h>
 
 #define END_COMMAND  "q"
 #define MAX_CONNECTIONS  5

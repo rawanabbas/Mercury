@@ -35,7 +35,7 @@ bool Client::_receive(std::string &msg) {
     return _sock.recvFrom(_serverSocket, msg);
 }
 
-bool Client::_receiveWithTimeout(std::string &msg) {
+int Client::_receiveWithTimeout(std::string &msg) {
     return _sock.recvWithTimeout(_serverSocket, msg);
 }
 

@@ -62,14 +62,14 @@ bool Heartbeat::_establishConnection() {
             return false;
 
         } else {
-
+            std::cout << "INFO RECIEVED: " << info << std::endl;
             Message message = Message::deserialize(info);
 
             if (message.getMessageType() == MessageType::Info) {
 
                 std::cout << "Updated Server Socket Info: " << message.getMessage() << std::endl;
                 _updateServerSocket(atoi(message.getMessage().c_str()), _serverSocket.getHost());
-                return false;
+                return true;
 
             } else {
 
@@ -83,17 +83,20 @@ bool Heartbeat::_establishConnection() {
 
 void Heartbeat::run() {
 
-    if (!_establishConnection()) {
+    if (_establishConnection()) {
 
-        while(true) {
+        while(_retry > 0) {
 
             Message pingMessage("Ping", MessageType::Ping);
 
             if (!_sendMessage(pingMessage)) {
 
                 perror("Cannot Send Message!");
+                _retry--;
 
             } else {
+
+                _resetTrials();
 
                 std::string msg;
                 std::cout << "Ping" << std::endl;
@@ -105,7 +108,7 @@ void Heartbeat::run() {
                     break;
 
                 } else {
-
+                    std::cout << "MESSAGE: " << msg << std::endl;
                     std::cout << "Pong!" << std::endl;
 
                 }

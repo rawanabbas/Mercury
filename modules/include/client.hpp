@@ -50,7 +50,7 @@ protected:
     bool _sendMessage(Message message);
     bool _send(std::string msg);
     bool _receive(std::string &msg);
-    bool _receiveWithTimeout(std::string &msg);
+    int _receiveWithTimeout(std::string &msg);
     void _exit(std::string msg);
     void _ping(std::string msg = "Ping!");
 public:

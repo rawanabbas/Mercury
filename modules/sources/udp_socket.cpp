@@ -67,10 +67,11 @@ int UDPSocket::recvFrom(UDPSocket &sock, std::string &msg) {
 
 int UDPSocket::recvWithTimeout(UDPSocket& sock, std::string &msg) {
     socklen_t s = sizeof(sock._address);
+    memset(_buffer, 0, MAX_RECV);
 
     struct timeval timeOut;
-    timeOut.tv_sec = 0;
-    timeOut.tv_usec = 1;
+    timeOut.tv_sec = 1;
+    timeOut.tv_usec = 0;
     FD_ZERO(&_fd);
     FD_SET(_sock, &_fd);
 
@@ -91,6 +92,7 @@ int UDPSocket::recvWithTimeout(UDPSocket& sock, std::string &msg) {
             return _bytes;
         }
     } else {
+        std::cout << "Timed-out!" << std::endl;
         return -1;
     }
 }

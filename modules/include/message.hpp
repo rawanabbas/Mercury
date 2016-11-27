@@ -26,6 +26,7 @@ enum class RPC {
     ReadFile,
     WriteToFile,
     OpenFile,
+    CloseFile,
     Undefined = -1
 };
 
@@ -53,9 +54,11 @@ private:
     RPC _rpcId;
     ReplyType _replyType;
     size_t _size;
+    std::map<std::string, std::string> _headers;
 
     //Private Functions
     static void _parseMessage(std::string serialized, ReplyType &reply, RPC &rpc, MessageType &type, int &size, time_t &timestamp, std::string &encodedMsg);
+    std::string _serializeHeaders();
 public:
 
     Message ();

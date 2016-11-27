@@ -69,6 +69,7 @@ std::string Message::serialize() {
     serialized = SizeToken + " " + std::to_string(_size) + " " + MessageToken + " " + serialized + " " + MessageTypeToken + " "
                  + std::to_string((int)_type) + " " + TimestampToken + " " + std::to_string(_timestamp) + " " + RPCToken + " " +
                  std::to_string((int)_rpcId) + " " + ReplyTypeToken + " " + std::to_string((int)_replyType);
+    std::cout << "Serialized Message: " << serialized <<std::endl;
     return serialized;
 }
 
@@ -97,6 +98,10 @@ void Message::_parseMessage(std::string serialized, ReplyType &reply, RPC &rpc, 
             reply = (ReplyType)replyType;
         }
     }
+}
+
+std::string Message::_serializeHeaders() {
+
 }
 
 Message Message::deserialize(std::string serialized) {

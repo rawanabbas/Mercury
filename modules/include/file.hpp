@@ -5,6 +5,8 @@
 #include "udp_socket.hpp"
 #include "message.hpp"
 
+typedef int FileDescriptor;
+
 enum class FileStatus {
     Locked,
     Opened,
@@ -28,17 +30,27 @@ enum class FileMode {
 class File {
 private:
     static int _id;
-    int _fd;
+    static const std::string FileDescriptorToken;
+    static const std::string FileNameToken;
+    static const std::string FileModeToken;
+    static const std::string DecodedLengthToken;
+    static const std::string WriteDataToken;
+
+    FileDescriptor _fd;
+
     bool _isLocal;
     bool _isOpen;
     bool _isEOF;
+
+    UDPSocket _sock;
     std::string _dir;
     FileStatus _status;
     FileMode _mode;
-    UDPSocket _sock;
     std::string _name;
+    int _decodedLength;
 
 public:
+
     File (bool local = false, std::string dir = "../../files/");
     FileStatus create(std::string name, FileMode mode = FileMode::Undefined);
     FileStatus rcreate(std::string name, FileMode mode, UDPSocket server);
@@ -54,8 +66,16 @@ public:
     FileStatus close();
     FileStatus rclose();
 
-    bool _lock();
-    bool _unlock();
+    void parseDetails(std::string details);
+    void parseDetails(std::string details, std::string data);
+
+    static void parse(std::string details, FileDescriptor &fd);
+    static void parse(std::string details, FileDescriptor &fd, std::string &name);
+    static void parse(std::string details, FileDescriptor &fd, std::string &name, FileMode &mode);
+    static void parse(std::string details, FileDescriptor &fd, std::string &name, FileMode &mode, std::string &bytes);
+
+    bool lock();
+    bool unlock();
 
     void setClientSocket(UDPSocket sock);
 

@@ -36,14 +36,15 @@ protected:
     UDPSocket _sock;
     UDPSocket _serverSocket;
     char _buffer[MAX_RECV];
+    std::map<FileDescriptor, File*> _files;
 
     void _updateServerSocket(int port, std::string host);
     bool _sendMessage(Message message);
     bool _send(std::string msg);
     bool _receive(std::string &msg);
     bool _createFile();
-    bool _createFile(File remoteFile);
-    bool _createFile(File remoteFile, std::string fileName);
+    bool _createFile(File *remoteFile);
+    bool _createFile(File *remoteFile, std::string fileName);
     void _readFile();
     void _sendFile();
     void _writeFile();

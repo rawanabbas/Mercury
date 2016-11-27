@@ -41,60 +41,42 @@ int Job::getJobId() const {
 
 void Job::_openFile(Message message) {
     std::cout << "Opening File ..." << std::endl;
-    char details[MAX_RECV];
-    //TO-DO: CHANGE TO STRING.
-    strcpy(details, message.getMessage().c_str());
-    char fileName[100];
-    int mode;
-    sscanf(details, "%s FM: %d", fileName, &mode);
-    std::cout << "File Name recieved: " << fileName << std::endl;
-    std::cout << "File Mode recieved: " << mode << std::endl;
-    File file;
-    ReplyType replyType = file.open(fileName, (FileMode)mode) == FileStatus::Opened ? ReplyType::Success : ReplyType::Failure;
-    std::string fd = std::to_string(file.getFd());
+    File *file = new File;
+    file->parseDetails(message.getMessage());
+    ReplyType replyType = file->open(file->getName(), file->getMode()) == FileStatus::Opened ? ReplyType::Success : ReplyType::Failure;
     message.setReplyType(replyType);
-    message.setMessage(fd.c_str());
+    message.setMessage("FD: " + std::to_string((int)file->getFd()));
+    _files.insert(std::pair<FileDescriptor, File*>(file->getFd(), file));
 }
 
 void Job::_createFile(Message &message) {
-    char details[MAX_RECV];
-    memset(details, 0, MAX_RECV);
-    //TO-DO: CHANGE TO STRING.
-    strcpy(details, message.getMessage().c_str());
-    std::cout << "Creating File ..." << std::endl;
-    char fileName[100];
-    int mode;
-    sscanf(details, "N: %s FM: %d", fileName, &mode);
-    std::cout << "File Name recieved: " << fileName << std::endl;
-    std::cout << "File Mode recieved: " << mode << std::endl;
-    File file;
-    FileStatus status = file.create(fileName, (FileMode)mode);
-    std::cout << "File Create Operation status " << (int)status << std::endl;
+    File *file = new File;
+    file->parseDetails(message.getMessage());
+    std::cout << "Done Parsing.." << std::endl;
+    FileStatus status = file->create(file->getName(), file->getMode());
+    std::cout << "File Create Operation status " << (int)(status) << std::endl;
     if (status == FileStatus::CreateOperationSuccess) {
+        std::cout << "File Created!" << std::endl;
         message.setReplyType(ReplyType::Success);
-        message.setMessage("File created!");
+        message.setMessage("FD: " + std::to_string((int)file->getFd()));
+        std::cout << "FD: " << file->getFd() << std::endl;
+        _files[file->getFd()] = file;
     } else {
+        std::cout << "File Not Created!" << std::endl;
         message.setReplyType(ReplyType::Failure);
         message.setMessage("File is not created!");
     }
 }
 
 void Job::_readFile(Message &message) {
-    char details[MAX_RECV];
-    memset(details, 0, MAX_RECV);
-    //TO-DO: CHANGE TO STRING.
-    strcpy(details, message.getMessage().c_str());
-    std::cout << "Reading File ..." << std::endl;
-    char fileName[100];
-    int mode;
-    sscanf(details, "%s FM: %d", fileName, &mode);
-    std::cout << "File Name recieved: " << fileName << std::endl;
-    std::cout << "File Mode recieved: " << mode << std::endl;
+    /*File *file;
+    file->parseDetails(message.getMessage(),);
+    FileDescriptor fd = file->getFd();*/
     std::string buffer;
-    File file;
-    file.setName(fileName);
-    file.setMode((FileMode)mode);
-    buffer = file.read();
+    FileDescriptor fd;
+    File::parse(message.getMessage(), fd);
+    File *file = _files[fd];
+    buffer = file->read();
     message.setMessageType(MessageType::Reply);
     message.setMessage(buffer);
     message.setReplyType(ReplyType::Success);
@@ -104,18 +86,26 @@ void Job::_writeFile(Message &message) {
     std::cout << "------------------------WRITE FILE-------------------------" << std::endl;
     std::cout << "Writing File ..." << std::endl;
     std::cout << "Message Size: " << message.getMessageSize() << std::endl;
-    char details[MAX_RECV];
-    //TO-DO: CHANGE TO STRING.
-    memcpy(details, message.getMessage().c_str(), message.getMessageSize());
-    char fileName[100];
-    int mode, decodedLength, bytesRead;
-    sscanf(details, "N: %s FM: %d L: %d W: %n", fileName, &mode, &decodedLength, &bytesRead);
-    File file;
-    FileStatus status = file.write(fileName, std::string(details + bytesRead, message.getMessageSize() - (bytesRead)), decodedLength);
-    if (status == FileStatus::WriteOperationSuccess) {
-        message.setMessage("Text is written to file!");
-        message.setReplyType(ReplyType::Success);
+
+    FileDescriptor fd;
+    FileMode mode;
+    std::string bytes, fileName;
+
+    File::parse(message.getMessage(), fd, fileName, mode, bytes);
+    std::cout << "Write FD: " << fd << std::endl;
+    File *file = _files[fd];
+
+    if  (file != NULL) {
+        FileStatus status = file->write(fileName, bytes, bytes.size());
+        if (status == FileStatus::WriteOperationSuccess) {
+            message.setMessage("Text is written to file!");
+            message.setReplyType(ReplyType::Success);
+        } else {
+            message.setMessage("Text is written to file failure!");
+            message.setReplyType(ReplyType::Failure);
+        }
     } else {
+        std::cout << "No Such File!" << std::endl;
         message.setMessage("Text is written to file failure!");
         message.setReplyType(ReplyType::Failure);
     }
@@ -146,6 +136,23 @@ JobState Job::_handleMessage(Message message) {
         } else if (message.getRpcId() == RPC::WriteToFile) {
             _writeFile(message);
             std::cout << "------------------------WRITE FILE-------------------------" << std::endl;
+        } else if (message.getRpcId() == RPC::CloseFile) {
+            std::cout << "------------------------CLOSE FILE-------------------------" << std::endl;
+            //            char details[MAX_READ];
+            //            strcpy(details, message.getMessage().c_str());
+            //            char fileName[100];
+            //            int fd;
+            //            sscanf(details, "N: %s FD: %d", fileName, &fd);
+            //            File file;
+            //            file.setFd(fd);
+            //            file.setName(fileName);
+            //            FileStatus status = file.close();
+            //            if (status == FileStatus::Closed) {
+            //                std::cout << "File is closed!" << std::endl;
+            //            } else {
+            //                std::cout << "Error Closing the File!" << std::endl;
+            //            }
+            std::cout << "------------------------CLOSE FILE-------------------------" << std::endl;
         } else {
             std::cout << "------------------------NO RPC-------------------------" << std::endl;
             std::cerr << "No RPC ID specified." << std::endl;

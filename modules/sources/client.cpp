@@ -86,23 +86,18 @@ void Client::_ping(std::string serializedMsg)
     }
 }
 
-void Client::_openFile()
-{
+void Client::_openFile() {
     std::string fileName;
     std::cout << "Enter File Name: ";
     std::cin >> fileName;
     std::cout << std::endl;
-    File file;
-    file.setClientSocket(_sock);
-    FileStatus openStatus = file.ropen(fileName, FileMode::ReadOnly, _serverSocket);
-    std::cout << "File Remote Open Status " << (int)openStatus << std::endl;
-    if (openStatus == FileStatus::Opened) {
+    File *file;
+    file->setClientSocket(_sock);
+    FileStatus status = file->ropen(fileName, FileMode::ReadOnly, _serverSocket);
+    std::cout << "File Remote Open Status " << (int)status << std::endl;
+    if (status == FileStatus::Opened) {
         std::cout << "File is open!" << std::endl;
-//        std::string str = file.read();
-//        FileStatus status = file.rread(_serverSocket);
-//        std::cout << str << std::endl;
-//        std::cout << (int)status << std::endl;
-//        std::cout << "------------------====================------------------" << std::endl;
+        _files.insert(std::pair<FileDescriptor, File*>(file->getFd(), file));
     } else {
         std::cout << "Cannt Open Remote File!" << std::endl;
     }
@@ -124,14 +119,14 @@ bool Client::_createFile() {
     }
 }
 
-bool Client::_createFile(File remoteFile) {
+bool Client::_createFile(File *remoteFile) {
     std::string fileName;
     std::cout <<"Enter File Name: ";
     std::cin >> fileName;
-    FileStatus status = remoteFile.rcreate(fileName, FileMode::ReadWrite, _serverSocket);
+    FileStatus status = remoteFile->rcreate(fileName, FileMode::ReadWrite, _serverSocket);
     std::cout << "Create Operation Status " << (int) status << std::endl;
     if (status == FileStatus::CreateOperationSuccess) {
-        std::cout << "File " << fileName << " is created!" << std::endl;
+        std::cout << "File " << fileName << " Remote Fd: "  << remoteFile->getFd() << " is created!" << std::endl;
         return true;
     } else {
         std::cout << "File creation failed!" << std::endl;
@@ -139,11 +134,11 @@ bool Client::_createFile(File remoteFile) {
     }
 }
 
-bool Client::_createFile(File remoteFile, std::string fileName) {
-    FileStatus status = remoteFile.rcreate(fileName, FileMode::ReadWrite, _serverSocket);
+bool Client::_createFile(File *remoteFile, std::string fileName) {
+    FileStatus status = remoteFile->rcreate(fileName, FileMode::ReadWrite, _serverSocket);
     std::cout << "Create Operation Status " << (int) status << std::endl;
     if (status == FileStatus::CreateOperationSuccess) {
-        std::cout << "File " << fileName << " is created!" << std::endl;
+        std::cout << "File " << fileName << " Remote Fd: " <<  remoteFile->getFd() << " is created!" << std::endl;
         return true;
     } else {
         std::cout << "File creation failed!" << std::endl;
@@ -171,15 +166,17 @@ void Client::_sendFile()
     std::string fileName, buffer;
     std::cout << "Enter File Name: ";
     std::cin >> fileName;
-    File remoteFile;
+    File *remoteFile = new File;
     if(_createFile(remoteFile, "server/" + fileName)) {
+        std::cout << "Mapping File to FD " << remoteFile->getFd() << std::endl;
+        _files[remoteFile->getFd()] = remoteFile;
         File file;
-        file.open(fileName, FileMode::ReadOnly);
-        FileStatus status;
+        FileStatus status = file.open(fileName, FileMode::ReadOnly);
+        std::cout << (int) status << std::endl;
         while (!file.isEOF()) {
             buffer = file.read();
             std::cout << "Buffer Size: " << buffer.length() << std::endl;
-            status = remoteFile.rwrite("server/" + fileName, buffer, _serverSocket);
+            status = remoteFile->rwrite("server/" + fileName, buffer, _serverSocket);
             if (status != FileStatus::WriteOperationSuccess) {
                 std::cout << "Couldn't send file!" << std::endl;
                 break;

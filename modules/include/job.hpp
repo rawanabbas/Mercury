@@ -15,6 +15,7 @@
 #include "message.hpp"
 #include "file.hpp"
 
+
 enum class JobState {
     Running,
     Exit
@@ -27,6 +28,8 @@ private:
     UDPSocket _serverSocket;
     void *_parent;
     Message _msg;
+
+    std::map<FileDescriptor, File*> _files;
 
     bool _sendInfo();
     void _listen();

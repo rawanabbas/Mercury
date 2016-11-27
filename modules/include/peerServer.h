@@ -1,6 +1,6 @@
 #ifndef PEERSERVER
 #define PEERSERVER
-#include<map>
+#include "stdfax.h"
 
 class peerServer
 {
@@ -15,12 +15,18 @@ private:
 	std::map<std::string,_client> clientsReg;
 	int _portNumber;
 	std::string IP;
+        sqlite3 * _db;
+        char* sql;
+        
 public:
-	peerServer();	//initialize surver
+	peerServer();	//initialize server
 	bool registerUser(_client client);	//registering the users
 	bool removeUser(std::string);	//removing the users
 	void pulse();	//for the heartbeat
 	bool checkAuthentication(std::string ip, std::string userName, std::string passowrd);	//check if the user is authenticated or not
+        void addToDb(std::string ownerIp, std::string imageName, std::string decryptionKey, std::vector<std::string> viewersIp, std::vector <int>numberOfViews);
+   
+        void initializeDb();
 	~peerServer();	//destruct server
 };
 

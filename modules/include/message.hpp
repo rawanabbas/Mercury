@@ -19,6 +19,7 @@ enum class MessageType {
     Pong,
     Info,
     Exit,
+    EstablishConnection,
     Undefined = -1};
 
 enum class RPC {
@@ -64,6 +65,7 @@ public:
     Message ();
     Message (std::string msg, MessageType type = MessageType::Undefined, RPC rpcId = RPC::Undefined, ReplyType replyType = ReplyType::NoReply);
     Message (std::string msg, MessageType type, RPC rpcId, ReplyType replyType, time_t timestamp);
+
     std::string getMessage();
     void setMessage(std::string);
 

@@ -17,7 +17,7 @@ private:
 	std::string IP;
         sqlite3 * _db;
         char* sql;
-        
+
 public:
 	peerServer();	//initialize server
 	bool registerUser(_client client);	//registering the users
@@ -25,7 +25,7 @@ public:
 	void pulse();	//for the heartbeat
 	bool checkAuthentication(std::string ip, std::string userName, std::string passowrd);	//check if the user is authenticated or not
         void addToDb(std::string ownerIp, std::string imageName, std::string decryptionKey, std::vector<std::string> viewersIp, std::vector <int>numberOfViews);
-   
+
         void initializeDb();
 	~peerServer();	//destruct server
 };

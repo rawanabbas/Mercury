@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <string>
+#include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -15,7 +16,9 @@
 #include <algorithm>
 #include <pthread.h>
 #include <ctime>
+#include <time.h>
 #include <fstream>
+#include <sstream>
 #include <map>
 #include <sqlite3.h>
 
@@ -31,3 +34,5 @@
 #define MAX_RECV  1024
 #define SUCCESS 200
 #define ERROR 400
+#define MAX_READ 600
+#define MAX_RETRY 3

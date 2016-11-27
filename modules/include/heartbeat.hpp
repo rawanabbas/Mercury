@@ -7,12 +7,34 @@
 #include "client.hpp"
 #include "message.hpp"
 
+enum class Status {
+    EstablishingConnection,
+    Ping,
+    Waiting,
+    Failed,
+    Pong
+};
+
 class Heartbeat : public Client {
+
+    pthread_condattr_t _timerAttr;
+    pthread_mutex_t _timerMutex;
+    pthread_cond_t _timerConditional;
+    Status _status;
+    timespec _pingTime;
+    int _retry;
+
+    void _wait(long pingTime);
+    void _resetTrials();
+    bool _establishConnection();
 public:
     Heartbeat(std::string host, int port);
+
+    Status getStatus();
+    void run();
+
     virtual ~Heartbeat();
 
-    void run();
 };
 
 #endif //HEARTBEAT_HPP

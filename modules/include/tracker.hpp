@@ -6,11 +6,16 @@
 #include "message.hpp"
 #include "user.hpp"
 
+typedef std::map<std::string, Peer*> PeerMap;
 
 class Tracker : public Thread {
+
     static int _id;
-    void *_parent;
+
     User *_user;
+
+    PeerMap *_peers;
+
     UDPSocket _clientSocket;
     UDPSocket _serverSocket;
     Message _msg;
@@ -19,7 +24,7 @@ class Tracker : public Thread {
     void _pulse();
 public:
 
-    Tracker(UDPSocket clientSocket, User *user);
+    Tracker(UDPSocket clientSocket, User *user, std::map<std::string, Peer*> *peers);
 
     void run();
     std::string getUserID();

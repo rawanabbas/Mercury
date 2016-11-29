@@ -18,6 +18,15 @@ void Thread::start() {
     pthread_create(&_thread, NULL, _run, (void *) this);
 }
 
+
+pthread_mutex_t Thread::getMutex() const {
+    return _mutex;
+}
+
+void Thread::setMutex(pthread_mutex_t mutex) {
+    _mutex = mutex;
+}
+
 void * Thread::_run(void *thisThread) {
     Thread* threadPtr = (Thread*) thisThread;
     threadPtr->run();
@@ -48,13 +57,21 @@ bool Thread::isRunning() {
     return _isRunning;
 }
 
-void Thread::lock() {
-    pthread_mutex_lock(&_mutex);
+int Thread::lock() {
+    return pthread_mutex_lock(&_mutex);
 }
 
-void Thread::release() {
-    pthread_mutex_unlock(&_mutex);
+int Thread::release() {
+    return pthread_mutex_unlock(&_mutex);
 }
+
+//void Thread::lock(pthread_mutex_t mutex) {
+//    pthread_mutex_lock(&mutex);
+//}
+
+//void Thread::release(pthread_mutex_t mutex) {
+//    pthread_mutex_unlock(&mutex);
+//}
 
 void Thread::setDoneCallback(ThreadCallback callback, void *parent) {
     _doneCallback = callback;

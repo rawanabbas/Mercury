@@ -1,7 +1,7 @@
 #ifndef CONNECTION_MANAGER_HPP
 #define CONNECTION_MANAGER_HPP
 
-#include "stdfax.h"
+#include "stdafx.h"
 
 class ConnectionManager {
 private:

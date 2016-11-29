@@ -10,6 +10,11 @@ PeerServer::PeerServer(int port) {
         throw "An error has occured while creating the server socket.";
 
     }
+    if (pthread_mutex_init(&_peersMutex, NULL)) {
+
+        throw "An error has occured while initializing the mutex";
+
+    }
 
     _isRunning = true;
 }
@@ -62,9 +67,10 @@ bool PeerServer::_authenticate(Message &msg, User *user) {
 
 void PeerServer::_spawnTracker(UDPSocket clientSocket, User *user) {
 
-    Tracker *tracker = new Tracker(clientSocket, user);
+    Tracker *tracker = new Tracker(clientSocket, user, &_peers);
     tracker -> setParent((void *)this);
     tracker -> setDoneCallback(_callbackWrapper, (void *)this);
+    tracker -> setMutex(_peersMutex);
     tracker -> start();
 
     _trackers.push_back(tracker);
@@ -72,6 +78,12 @@ void PeerServer::_spawnTracker(UDPSocket clientSocket, User *user) {
     user->setIP(clientSocket.getHost());
     user->setPort(3001);
 
+}
+
+void PeerServer::_addPeer(User *user) {
+    lock();
+    _peers[user->getUserID()] = (Peer *)user;
+    release();
 }
 
 bool PeerServer::_register(Message msg, User *user) {
@@ -96,6 +108,7 @@ bool PeerServer::_register(Message msg, User *user) {
 
     }
 
+    _addPeer(user);
     user->setPassword(password);
     user->setUsername(username);
 
@@ -127,7 +140,7 @@ void PeerServer::run() {
 
                 if(_authenticate(msg, user) && user != nullptr) {
 
-                    _peers[user->getUserID()] = user;
+                    _addPeer(user);
 
                 }
 
@@ -140,7 +153,7 @@ void PeerServer::run() {
 
                 if (_register(msg, user)) {
 
-                    _peers[user->getUserID()] = user;
+                    _addPeer(user);
 
                     msg.setMessage(user->getUserID());
                     msg.setMessageType(MessageType::Authenticated);
@@ -166,6 +179,15 @@ void PeerServer::run() {
     }
 }
 
+
+PeerMap PeerServer::getPeers() const {
+    return _peers;
+}
+
+pthread_mutex_t PeerServer::getPeersMutex() const {
+    return _peersMutex;
+}
+
 void PeerServer::_terminateTracker(Tracker *tracker) {
 
     std::cout << "Terminating the Tracker!" << std::endl;
@@ -180,7 +202,10 @@ void PeerServer::_terminateTracker(Tracker *tracker) {
         (*it) -> join();
 
         _trackers.erase(it);
+
+        lock();
         _peers.erase(userID);
+        release();
 
     }
 }

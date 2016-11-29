@@ -1,7 +1,7 @@
 #ifndef DATABASE_HPP
 #define DATABASE_HPP
 
-#include "stdfax.h"
+#include "stdafx.h"
 #include "user.hpp"
 
 enum class DatabaseStatus {

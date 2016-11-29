@@ -1,4 +1,4 @@
-#include "stdfax.h"
+#include "stdafx.h"
 #include "server.hpp"
 #include "client.hpp"
 #include "heartbeat.hpp"

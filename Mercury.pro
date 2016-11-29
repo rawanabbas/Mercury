@@ -13,7 +13,7 @@ INCLUDEPATH += modules/include
 TARGET = Mercury
 TEMPLATE = app
 
-PRECOMPILED_HEADER = modules/include/stdfax.h
+PRECOMPILED_HEADER = modules/include/stdafx.h
 
 SOURCES += main.cpp\
     mainwindow.cpp \
@@ -36,10 +36,10 @@ SOURCES += main.cpp\
     modules/sources/decoder.cpp \
     modules/sources/user.cpp \
     modules/sources/database.cpp \
-    modules/sources/tracker.cpp
+    modules/sources/tracker.cpp \
+    modules/sources/steganography.cpp
 
 HEADERS  += mainwindow.h \
-    modules/include/stdfax.h \
     modules/include/client.hpp \
     modules/include/connection_manager.hpp \
     modules/include/decoder.hpp \
@@ -56,6 +56,8 @@ HEADERS  += mainwindow.h \
     modules/include/udp_socket.hpp \
     modules/include/user.hpp \
     modules/include/database.hpp \
-    modules/include/tracker.hpp
+    modules/include/tracker.hpp \
+    modules/include/steganography.hpp \
+    modules/include/stdafx.h
 
 FORMS    += mainwindow.ui

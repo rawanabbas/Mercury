@@ -9,7 +9,7 @@
 #ifndef MESSAGE_HPP
 #define MESSAGE_HPP
 
-#include "stdfax.h"
+#include "stdafx.h"
 #include "decoder.hpp"
 
 enum class MessageType {
@@ -24,6 +24,8 @@ enum class MessageType {
     Authenticated,
     Unauthorized,
     Register,
+    Query,
+    Result,
     Undefined = -1
 };
 

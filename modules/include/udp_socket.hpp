@@ -8,7 +8,7 @@
 #ifndef UDPSOCKET_HPP
 #define UDPSOCKET_HPP
 
-#include "stdfax.h"
+#include "stdafx.h"
 #include "message.hpp"
 
 class UDPSocket {

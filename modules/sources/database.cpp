@@ -110,8 +110,6 @@ int Database::_fetchCallback(void *userPtr, int argc, char **argv, char **column
         } else if (std::string(column[i]) == UserIDColumnToken) {
             std::cout << "--UserID--" << std::endl;
             user->setUserID(argv[i]);
-            std::cout << "Set: " << argv[i] << std::endl;
-            std::cout << "USERID: " << user->getUserID() << std::endl;
             continue;
 
         } else if (std::string(column[i]) == PasswordColumnToken) {
@@ -123,13 +121,6 @@ int Database::_fetchCallback(void *userPtr, int argc, char **argv, char **column
 
 
     }
-
-    std::cout << "------------------------------------------" << std::endl;
-    std::cout << "FETCH CALLBACK:" << std::endl;
-    std::cout << "Username: " << user->getUsername() << std::endl;
-    std::cout << "UserPassword: " << user->getPassword() << std::endl;
-    std::cout << "UserID: " << user->getUserID() << std::endl;
-    std::cout << "------------------------------------------" << std::endl;
 
     return 0;
 

@@ -8,7 +8,7 @@
 #ifndef SERVER_HPP
 #define  SERVER_HPP
 
-#include "stdfax.h"
+#include "stdafx.h"
 #include "udp_socket.hpp"
 #include "thread.hpp"
 #include "job.hpp"

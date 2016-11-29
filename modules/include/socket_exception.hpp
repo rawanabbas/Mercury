@@ -9,7 +9,7 @@
 #ifndef SOCKET_EXCEPTION_HPP
 #define SOCKET_EXCEPTION_HPP
 
-#include "stdfax.h"
+#include "stdafx.h"
 
 class SocketException {
 private:

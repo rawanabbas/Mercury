@@ -9,7 +9,7 @@
 #ifndef JOB_HPP
 #define JOB_HPP
 
-#include "stdfax.h"
+#include "stdafx.h"
 #include "udp_socket.hpp"
 #include "thread.hpp"
 #include "message.hpp"

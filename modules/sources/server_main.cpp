@@ -5,7 +5,7 @@
  *  Project One - CSCE 4411
  */
 
-#include "stdfax.h"
+#include "stdafx.h"
 #include "server.hpp"
 
 int main(int argc, char const *argv[]) {

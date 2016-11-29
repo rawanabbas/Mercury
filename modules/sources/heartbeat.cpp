@@ -8,28 +8,97 @@
 #include "heartbeat.hpp"
 
 void Heartbeat::_wait(long pingTime) {
+
     clock_gettime(CLOCK_MONOTONIC, &_pingTime);
     _pingTime.tv_sec += pingTime;
     pthread_cond_timedwait(&_timerConditional, &_timerMutex, &_pingTime);
+
 }
 
 void Heartbeat::_resetTrials() {
+
     _retry = MAX_RETRY;
+
 }
 
-Heartbeat::Heartbeat(std::string ownerId, std::string host, int port) : Client(ownerId, host, port) {
+Heartbeat::Heartbeat(std::string ownerId, std::string host, int port) : Client(ownerId, host, port), _query(false) {
 
     pthread_condattr_init(&_timerAttr);
     pthread_condattr_setclock(&_timerAttr, CLOCK_MONOTONIC);
+
     pthread_mutex_init(&_timerMutex, NULL);
     pthread_cond_init(&_timerConditional, &_timerAttr);
+
     _resetTrials();
 
+}
+
+PeerMap Heartbeat::getPeers() {
+    return _peers;
+}
+
+void Heartbeat::_parsePeerList(std::string peerList) {
+    std::stringstream ss(peerList);
+    std::string peer;
+
+    while (ss >> peer) {
+
+        std::string userID, ip, username;
+
+        getline(ss, userID, ',');
+        getline(ss, ip, ',');
+        getline(ss, username, '\n');
+
+        Peer *peer = new Peer(userID, ip, username);
+
+        _peers[userID] = peer;
+
+    }
+}
+
+void Heartbeat::_queryPeers() {
+    Message queryMessage(getOwnerId(), "Query!", MessageType::Query);
+
+    if (!_sendMessage(queryMessage)) {
+
+        perror("Cannot Send Messages!");
+        std::cerr << "An error has occured, cannot send messages!" << std::endl;
+
+    } else {
+
+        std::string sPeerList;
+        if (_receive(sPeerList) == -1) {
+
+            perror("Cannot recieve the peering list!");
+            std::cerr << "An error has occured, cannot recieve the peering list!" << std::endl;
+
+        } else {
+
+            Message resultMessage = Message::deserialize(sPeerList);
+
+            if (resultMessage.getMessageType() == MessageType::Result) {
+
+                std::string peerList = resultMessage.getMessage();
+
+                _parsePeerList(peerList);
+
+            } else {
+
+                std::cout << "Cannot understand response!" << std::endl;
+            }
+        }
+
+    }
+}
+
+void Heartbeat::queryPeers() {
+    _query = true;
 }
 
 bool Heartbeat::_establishConnection() {
 
     Message eMessage(getOwnerId(), "Establish!", MessageType::EstablishConnection);
+
     while(_retry > 0) {
 
         _status = Status::EstablishingConnection;
@@ -87,34 +156,52 @@ void Heartbeat::run() {
 
         while(_retry > 0) {
 
-            Message pingMessage(getOwnerId(), "Ping", MessageType::Ping);
+            if (!_query) {
 
-            if (!_sendMessage(pingMessage)) {
+                Message pingMessage(getOwnerId(), "Ping", MessageType::Ping);
 
-                perror("Cannot Send Message!");
-                _retry--;
+                if (!_sendMessage(pingMessage)) {
 
-            } else {
-
-                _resetTrials();
-
-                std::string msg;
-                std::cout << "Ping" << std::endl;
-
-                if (_receiveWithTimeout(msg, 5) == -1) {
-
-                    perror("Cannot Recieve Message!");
-                    std::cerr << "Server Disconnected!" << std::endl;
-                    break;
+                    perror("Cannot Send Message!");
+                    _retry--;
 
                 } else {
-                    std::cout << "MESSAGE: " << msg << std::endl;
-                    std::cout << "Pong!" << std::endl;
+
+
+                    std::string msg;
+                    std::cout << "Ping" << std::endl;
+
+
+                    int r;
+
+                    while (((r = _receiveWithTimeout(msg, 5)) == -1) && (_retry > 0)) {
+                        std::cout << "Cannot recieve retrying!" << std::endl;
+                        _retry--;
+                    }
+
+                    if (r == -1 && _retry == 0) {
+
+                        perror("Cannot Recieve Message!");
+                        std::cerr << "Server Disconnected!" << std::endl;
+                        break;
+
+                    } else {
+
+                        std::cout << "MESSAGE: " << msg << std::endl;
+                        std::cout << "Pong!" << std::endl;
+
+                    }
 
                 }
 
+            } else {
+
+                _queryPeers();
+                _query = false;
+
             }
 
+            _resetTrials();
             _wait(2);
 
         }

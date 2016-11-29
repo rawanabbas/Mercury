@@ -5,7 +5,7 @@
  *  Project One - CSCE 4411
  */
 
-#include "stdfax.h"
+#include "stdafx.h"
 #include "client.hpp"
 #include "udp_socket.hpp"
 

@@ -6,11 +6,11 @@
 #################################################################################################################################
 .PHONY: all pre server client app peering clean
 SRC_DIR = ./sources
-OBJ_DIR = ./objects
 INCLUDE_DIR = ./include
 INCLUDE = -I$(INCLUDE_DIR)
-BINARY = ./binary
-BUILD = ./build
+BINARY_DIR = ./binary
+BUILD_DIR = ./build
+OBJ_DIR = ./objects
 
 CC = g++
 DEBUG = g
@@ -46,6 +46,7 @@ APP_OBJS = \
 	$(OBJ_DIR)/message.o \
 	$(OBJ_DIR)/file.o \
 	$(OBJ_DIR)/decoder.o \
+	$(OBJ_DIR)/peer.o \
 	$(OBJ_DIR)/heartbeat.o \
 	$(OBJ_DIR)/app.o
 
@@ -57,6 +58,7 @@ PEER_OBJS = \
 	$(OBJ_DIR)/user.o \
 	$(OBJ_DIR)/message.o \
 	$(OBJ_DIR)/peer_server.o \
+	$(OBJ_DIR)/peer.o \
 	$(OBJ_DIR)/decoder.o \
 	$(OBJ_DIR)/peer_server_main.o
 
@@ -76,44 +78,42 @@ SERVER_MAIN = $(SRC_DIR)/server_main.cpp
 
 CLIENT_MAIN = $(SRC_DIR)/client_main.cpp
 
+MKDIR = mkdir -p
+
+MKDIR_OBJS = $(MKDIR) $(OBJ_DIR)
+
+MKDIR_BINARY = $(MKDIR) $(BINARY_DIR)
+
+MKDIR_BUILD = $(MKDIR) $(BUILD_DIR)
+
+
+
 all: pre server client app peering
 
-%.o: $(SRC_DIR)/%.cpp
-	echo $< $@
+pre:
+	$(MKDIR_BUILD); $(MKDIR_BINARY); $(MKDIR_BINARY)
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(CC) -c $< $(INCLUDE) -o $(OBJ_DIR)/$(notdir $@)  $(CFLAGS)
 
-%.h.gch: $(INCLUDE_DIR)/%.h
-	$(CC) -c $< -o $(BINARY)/$(notdir $@) $(CFLAGS)
+%.o: pre $(SRC_DIR)/%.cpp
+		echo $< $@
+		$(CC) -c $< $(INCLUDE) -o $(OBJ_DIR)/$(notdir $@)  $(CFLAGS)
 
-pre: $(PRECOMPILED_HEADER_BINARY)
+%.h.gch: pre $(INCLUDE_DIR)/%.h
+	$(CC) -c $< -o $(BINARY_DIR)/$(notdir $@) $(CFLAGS)
 
-pserver:
-	$(foreach file,$(SERVER_OBJS),\
-	make $(notdir $(file));)
+server: pre $(SERVER_OBJS)
+	$(CC) $(SERVER_OBJS) $(INCLUDE) -o $(BUILD_DIR)/$(SERVER_BINARY) $(CFLAGS)
 
-pclient:
-	$(foreach file,$(CLIENT_OBJS),\
-	make $(notdir $(file));)
+client: pre $(CLIENT_OBJS)
+	$(CC) $(CLIENT_OBJS) $(INCLUDE) -o $(BUILD_DIR)/$(CLIENT_BINARY) $(CFLAGS)
 
-papp:
-	$(foreach file,$(APP_OBJS),\
-	make $(notdir $(file));)
+app: pre $(APP_OBJS)
+	$(CC) $(APP_OBJS) $(INCLUDE) -o $(BUILD_DIR)/$(APP_BINARY) $(CFLAGS)
 
-ppeering: 
-		$(foreach file,$(PEER_OBJS),\
-		make $(notdir $(file));)
-
-server: pre pserver
-	$(CC) $(SERVER_OBJS) $(INCLUDE) -o $(BUILD)/$(SERVER_BINARY) $(CFLAGS)
-
-client: pre pclient
-	$(CC) $(CLIENT_OBJS) $(INCLUDE) -o $(BUILD)/$(CLIENT_BINARY) $(CFLAGS)
-
-app: pre papp
-	$(CC) $(APP_OBJS) $(INCLUDE) -o $(BUILD)/$(APP_BINARY) $(CFLAGS)
-
-peering: pre ppeering
-	$(CC) $(PEER_OBJS) $(INCLUDE) -o $(BUILD)/$(PEER_BINARY) $(CFLAGS)
+peering: pre $(PEER_OBJS)
+	$(CC) $(PEER_OBJS) $(INCLUDE) -o $(BUILD_DIR)/$(PEER_BINARY) $(CFLAGS)
 
 clean:
-	rm -rf $(BUILD)/*.o $(BINARY)/*.o $(OBJ_DIR)/*.o
+	rm -rf $(BUILD_DIR)/*.o $(BINARY_DIR)/*.o $(OBJ_DIR)/*.o

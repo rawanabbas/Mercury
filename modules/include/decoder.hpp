@@ -1,6 +1,6 @@
 #ifndef DECODER_HPP
 #define DECODER_HPP
-#include "stdfax.h"
+#include "stdafx.h"
 class Decoder {
     static const char EncodingTable[];
     static inline void _a3_to_a4(unsigned char * a4, unsigned char * a3);

@@ -1,33 +1,40 @@
 #ifndef PEER_HPP
 #define PEER_HPP
 
-#include "stdfax.h"
+#include "stdafx.h"
 
 class Peer {
-private:
+
+protected:
+
     int _port;
     std::string _ip;
+    std::string _id;
     std::string _username;
-    std::string _password;
 
-    std::string _hash();
+    void _generateID();
 
 public:
-    Peer ();
 
-    virtual ~Peer ();
+    Peer();
+    Peer(std::string username, std::string ip, int port = 3001);
+    Peer(std::string id, std::string username, std::string ip, int port = 3001);
+
 
     int getPort() const;
     void setPort(int value);
 
-    std::string getIp() const;
-    void setIp(const std::string &value);
+    std::string getIP() const;
+    void setIP(const std::string &value);
 
     std::string getUsername() const;
     void setUsername(const std::string &value);
 
-    std::string getPassword() const;
-    void setPassword(const std::string &value);
+    std::string getUserID() const;
+    void setUserID(const std::string &id);
+
+    virtual ~Peer ();
+
 };
 
 #endif //PEER_HPP

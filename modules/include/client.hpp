@@ -8,7 +8,7 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include "stdfax.h"
+#include "stdafx.h"
 #include "udp_socket.hpp"
 #include "thread.hpp"
 #include "message.hpp"
@@ -80,8 +80,8 @@ protected:
     void _register();
     void _authenticate();
 
-    bool _lock();
-    bool _unlock();
+    int _lock();
+    int _unlock();
 
     void _clearCommand();
 

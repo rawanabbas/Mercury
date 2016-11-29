@@ -8,6 +8,7 @@ QT       += core gui
 CONFIG += c++11
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
+LIBS += -lpthread -lcrypto++
 INCLUDEPATH += modules/include
 TARGET = Mercury
 TEMPLATE = app
@@ -15,7 +16,7 @@ TEMPLATE = app
 PRECOMPILED_HEADER = modules/include/stdfax.h
 
 SOURCES += main.cpp\
-        mainwindow.cpp \
+    mainwindow.cpp \
     modules/sources/app.cpp \
     modules/sources/client.cpp \
     modules/sources/client_main.cpp \
@@ -30,8 +31,12 @@ SOURCES += main.cpp\
     modules/sources/server_main.cpp \
     modules/sources/socket_exception.cpp \
     modules/sources/thread.cpp \
+    modules/sources/peer_server.cpp \
     modules/sources/udp_socket.cpp \
-    modules/sources/decoder.cpp
+    modules/sources/decoder.cpp \
+    modules/sources/user.cpp \
+    modules/sources/database.cpp \
+    modules/sources/tracker.cpp
 
 HEADERS  += mainwindow.h \
     modules/include/stdfax.h \
@@ -44,9 +49,13 @@ HEADERS  += mainwindow.h \
     modules/include/logger.hpp \
     modules/include/message.hpp \
     modules/include/peer.hpp \
+    modules/include/peer_server.hpp \
     modules/include/server.hpp \
     modules/include/socket_exception.hpp \
     modules/include/thread.hpp \
-    modules/include/udp_socket.hpp
+    modules/include/udp_socket.hpp \
+    modules/include/user.hpp \
+    modules/include/database.hpp \
+    modules/include/tracker.hpp
 
 FORMS    += mainwindow.ui

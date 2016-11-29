@@ -23,13 +23,18 @@ enum class JobState {
 
 class Job : public Thread {
 private:
+    void *_parent;
     static int _id;
+    std::string _ownerId;
+
     UDPSocket _clientSocket;
     UDPSocket _serverSocket;
-    void *_parent;
+
     Message _msg;
 
     std::map<FileDescriptor, File*> _files;
+
+    //Private Function Handlers
 
     bool _sendInfo();
     void _listen();
@@ -40,7 +45,8 @@ private:
     JobState _handleMessage(Message message);
 
 public:
-    Job (UDPSocket sock);
+
+    Job (std::string ownerId, UDPSocket sock);
     int getJobId() const;
     virtual ~Job ();
     void run();

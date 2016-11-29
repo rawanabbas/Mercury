@@ -7,11 +7,16 @@
  */
 #include "server.hpp"
 
-Server::Server(int port) : Thread() {
+Server::Server(std::string ownerId, int port) : Thread(), _ownerId(ownerId) {
+
     std::cout << "Port Number: " << port << std::endl;
+
     if (!_sock.create(port)) {
+
         throw "An error has occured while creating the server socket.";
+
     }
+
     _isRunning = true;
 }
 
@@ -19,23 +24,40 @@ Server::~Server() {
 
 }
 
+void Server::_spawnJob(UDPSocket clientSocket) {
+
+    Job *job = new Job(_ownerId, clientSocket);
+
+    job -> setParent((void *)this);
+    job -> setDoneCallback(_callbackWrapper, (void *)this);
+    job -> start();
+
+    _jobs.push_back(job);
+}
+
 void Server::listen() {
+
     std::cout << "Server is now listening on " <<  _sock.getPortNumber() << std::endl;
+
     while (_isRunning) {
+
         if (_jobs.size() < MAX_CONNECTIONS) {
+
             UDPSocket clientSocket;
             std::string serializedMsg;
-            Message msg;
+
+
+
             if (_sock.recvFrom(clientSocket, serializedMsg) != -1) {
+
                 std::cout << "Client Socket: " << clientSocket.getPortNumber() << std::endl;
                 std::cout << "Messaged Received From  " << clientSocket.getHost() << ":" << clientSocket.getPortNumber() << "-> " << serializedMsg << std::endl;
-                msg = Message::deserialize(serializedMsg);
+
+                Message msg = Message::deserialize(serializedMsg);
+
                 if (msg.getMessageType() != MessageType::Exit) {
-                    Job *job = new Job(clientSocket);
-                    job -> setParent((void *)this);
-                    job -> setDoneCallback(_callbackWrapper, (void *)this);
-                    job -> start();
-                    _jobs.push_back(job);
+
+                    _spawnJob(clientSocket);
                 }
             }
 
@@ -44,10 +66,15 @@ void Server::listen() {
 }
 
 void Server::accept(UDPSocket& client) {
+
     if (_clients.size() == MAX_CONNECTIONS) {
+
         throw "Maximum number of connections, connection rejected";
+
     } else {
+
         _clients.push_back(&client);
+
     }
 }
 
@@ -64,6 +91,7 @@ void Server::_terminateJob(Job *job) {
     _isRunning = false;
     std::vector<Job*>::iterator it = std::find(_jobs.begin(), _jobs.end(), job);
     if (it != _jobs.end()) {
+
         (*it) -> join();
         _jobs.erase(it);
     }

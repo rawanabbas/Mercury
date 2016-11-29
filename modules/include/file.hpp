@@ -52,17 +52,22 @@ private:
 public:
 
     File (bool local = false, std::string dir = "../../files/");
+
     FileStatus create(std::string name, FileMode mode = FileMode::Undefined);
-    FileStatus rcreate(std::string name, FileMode mode, UDPSocket server);
+    FileStatus rcreate(std::string ownerId, std::string name, FileMode mode, UDPSocket server);
+
     FileStatus open(std::string path, FileMode mode);
-    FileStatus ropen(std::string path, FileMode mode, UDPSocket server);
+    FileStatus ropen(std::string ownerId, std::string path, FileMode mode, UDPSocket server);
+
     std::string read();
-    FileStatus rread(UDPSocket server);
+    FileStatus rread(std::string ownerId, UDPSocket server);
+
     FileStatus write(std::string str);
     FileStatus write(std::string str, unsigned int length);
     FileStatus write(std::string name, std::string str, unsigned int length);
-    FileStatus rwrite(std::string name, std::string txt, UDPSocket server);
-    FileStatus rwrite(std::string txt, UDPSocket server);
+    FileStatus rwrite(std::string ownerId, std::string name, std::string txt, UDPSocket server);
+    FileStatus rwrite(std::string ownerId, std::string txt, UDPSocket server);
+
     FileStatus close();
     FileStatus rclose();
 
@@ -99,5 +104,7 @@ public:
 
     virtual ~File ();
 
+    int getDecodedLength() const;
+    void setDecodedLength(int decodedLength);
 };
 #endif //FILE_HPP

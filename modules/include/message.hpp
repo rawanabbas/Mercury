@@ -20,7 +20,12 @@ enum class MessageType {
     Info,
     Exit,
     EstablishConnection,
-    Undefined = -1};
+    Authenticate,
+    Authenticated,
+    Unauthorized,
+    Register,
+    Undefined = -1
+};
 
 enum class RPC {
     CreateFile,
@@ -46,7 +51,7 @@ private:
     static const std::string TimestampToken;
     static const std::string ReplyTypeToken;
     static const std::string RPCToken;
-    static const std::string UserIdToken;
+    static const std::string OwnerIdToken;
 
     //Private Variables
     MessageType _type;
@@ -55,16 +60,22 @@ private:
     RPC _rpcId;
     ReplyType _replyType;
     size_t _size;
+    std::string _ownerId;
+
     std::map<std::string, std::string> _headers;
 
     //Private Functions
-    static void _parseMessage(std::string serialized, ReplyType &reply, RPC &rpc, MessageType &type, int &size, time_t &timestamp, std::string &encodedMsg);
+    static void _parseMessage(std::string serialized, std::string &ownerId, ReplyType &reply,
+                              RPC &rpc, MessageType &type, int &size, time_t &timestamp,
+                              std::string &encodedMsg);
+
     std::string _serializeHeaders();
+
 public:
 
     Message ();
-    Message (std::string msg, MessageType type = MessageType::Undefined, RPC rpcId = RPC::Undefined, ReplyType replyType = ReplyType::NoReply);
-    Message (std::string msg, MessageType type, RPC rpcId, ReplyType replyType, time_t timestamp);
+    Message (std::string ownerId, std::string msg, MessageType type, RPC rpcId, ReplyType replyType, time_t timestamp);
+    Message (std::string ownerId, std::string msg, MessageType type = MessageType::Undefined, RPC rpcId = RPC::Undefined, ReplyType replyType = ReplyType::NoReply);
 
     std::string getMessage();
     void setMessage(std::string);
@@ -83,7 +94,14 @@ public:
     ReplyType getReplyType() const;
     void setReplyType(const ReplyType &replyType);
 
+    void addHeader(std::string key, std::string value);
+    void editHeader(std::string key, std::string value);
+    std::string getHeader(std::string key);
+
     virtual ~Message ();
+
+    std::string getOwnerId() const;
+    void setOwnerId(const std::string &ownerId);
 };
 
 #endif // MESSAGE_HPP

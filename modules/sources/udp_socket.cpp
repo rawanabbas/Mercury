@@ -65,35 +65,51 @@ int UDPSocket::recvFrom(UDPSocket &sock, std::string &msg) {
 
 }
 
-int UDPSocket::recvWithTimeout(UDPSocket& sock, std::string &msg) {
+int UDPSocket::recvWithTimeout(UDPSocket& sock, std::string &msg, int timeout) {
+
     socklen_t s = sizeof(sock._address);
     memset(_buffer, 0, MAX_RECV);
 
     struct timeval timeOut;
-    timeOut.tv_sec = 1;
+    timeOut.tv_sec = timeout;
     timeOut.tv_usec = 0;
+
     FD_ZERO(&_fd);
     FD_SET(_sock, &_fd);
 
     if (select (_sock + 1, &_fd, NULL, NULL, &timeOut) < 0) {
+
         perror("Cannot Set Timeout!");
+
     }
+
     if (FD_ISSET(_sock, &_fd)) {
+
         if ((_bytes = ::recvfrom(_sock, _buffer, MAX_RECV, 0, (sockaddr *) &(sock._address),  &s)) <= 0) {
+
             perror("Cannot recieve.");
+
         }
+
         std::cout << "Bytes recieved: " << _bytes << std::endl;
+
         if (_bytes > MAX_RECV) {
+
             perror("Buffer Overflow!");
             return -1;
+
         } else {
+
             _buffer[_bytes] = '\0';
             msg = std::string(_buffer);
             return _bytes;
+
         }
     } else {
+
         std::cout << "Timed-out!" << std::endl;
         return -1;
+
     }
 }
 

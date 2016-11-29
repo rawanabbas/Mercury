@@ -15,7 +15,7 @@ int main(int argc, char const *argv[]) {
         exit(1);
     }
     std::cout << "Hello! Let's Do This! " << std::endl;
-    Client client("127.0.0.1", 3001);
+    Client client(argv[1], atoi(argv[2]));
     client.start();
     client.join();
 

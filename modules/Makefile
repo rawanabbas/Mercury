@@ -4,7 +4,7 @@
 # Date: 6th November 2016                                                                                                       #
 # CSCE 4411 - Project One Mercury                                                                                               #
 #################################################################################################################################
-.PHONY: all pre server client app clean
+.PHONY: all pre server client app peering clean
 SRC_DIR = ./sources
 OBJ_DIR = ./objects
 INCLUDE_DIR = ./include
@@ -14,7 +14,7 @@ BUILD = ./build
 
 CC = g++
 DEBUG = g
-LIBS = -lpthread
+LIBS = -lpthread -lcrypto++ -lsqlite3
 CFLAGS = -std=c++11 -Wall -Wno-reorder $(LIBS)
 
 SERVER_OBJS = \
@@ -24,8 +24,8 @@ SERVER_OBJS = \
 	$(OBJ_DIR)/message.o \
 	$(OBJ_DIR)/file.o \
 	$(OBJ_DIR)/server.o \
-	$(OBJ_DIR)/decoder.o \
-	$(OBJ_DIR)/server_main.o
+	$(OBJ_DIR)/decoder.o
+	# $(OBJ_DIR)/server_main.o
 
 CLIENT_OBJS = \
 	$(OBJ_DIR)/client.o \
@@ -34,8 +34,8 @@ CLIENT_OBJS = \
 	$(OBJ_DIR)/message.o \
 	$(OBJ_DIR)/job.o \
 	$(OBJ_DIR)/file.o \
-	$(OBJ_DIR)/decoder.o \
-	$(OBJ_DIR)/client_main.o
+	$(OBJ_DIR)/decoder.o
+	# $(OBJ_DIR)/client_main.o
 
 APP_OBJS = \
 	$(OBJ_DIR)/udp_socket.o \
@@ -49,6 +49,18 @@ APP_OBJS = \
 	$(OBJ_DIR)/heartbeat.o \
 	$(OBJ_DIR)/app.o
 
+PEER_OBJS = \
+	$(OBJ_DIR)/udp_socket.o \
+	$(OBJ_DIR)/thread.o \
+	$(OBJ_DIR)/tracker.o \
+	$(OBJ_DIR)/database.o \
+	$(OBJ_DIR)/user.o \
+	$(OBJ_DIR)/message.o \
+	$(OBJ_DIR)/peer_server.o \
+	$(OBJ_DIR)/decoder.o \
+	$(OBJ_DIR)/peer_server_main.o
+
+
 PRECOMPILED_HEADER_BINARY = stdfax.h.gch
 PRECOMPILED_HEADER = stdfax.h
 
@@ -58,11 +70,13 @@ CLIENT_BINARY = client.o
 
 APP_BINARY = app.o
 
+PEER_BINARY = peer.o
+
 SERVER_MAIN = $(SRC_DIR)/server_main.cpp
 
 CLIENT_MAIN = $(SRC_DIR)/client_main.cpp
 
-all: pre server client app
+all: pre server client app peering
 
 %.o: $(SRC_DIR)/%.cpp
 	echo $< $@
@@ -85,14 +99,21 @@ papp:
 	$(foreach file,$(APP_OBJS),\
 	make $(notdir $(file));)
 
+ppeering: 
+		$(foreach file,$(PEER_OBJS),\
+		make $(notdir $(file));)
+
 server: pre pserver
 	$(CC) $(SERVER_OBJS) $(INCLUDE) -o $(BUILD)/$(SERVER_BINARY) $(CFLAGS)
 
 client: pre pclient
 	$(CC) $(CLIENT_OBJS) $(INCLUDE) -o $(BUILD)/$(CLIENT_BINARY) $(CFLAGS)
 
-app: pre papp $(APP_OBJS)
+app: pre papp
 	$(CC) $(APP_OBJS) $(INCLUDE) -o $(BUILD)/$(APP_BINARY) $(CFLAGS)
+
+peering: pre ppeering
+	$(CC) $(PEER_OBJS) $(INCLUDE) -o $(BUILD)/$(PEER_BINARY) $(CFLAGS)
 
 clean:
 	rm -rf $(BUILD)/*.o $(BINARY)/*.o $(OBJ_DIR)/*.o

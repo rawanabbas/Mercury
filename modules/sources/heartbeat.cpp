@@ -17,7 +17,7 @@ void Heartbeat::_resetTrials() {
     _retry = MAX_RETRY;
 }
 
-Heartbeat::Heartbeat(std::string host, int port) : Client(host, port, 0) {
+Heartbeat::Heartbeat(std::string ownerId, std::string host, int port) : Client(ownerId, host, port) {
 
     pthread_condattr_init(&_timerAttr);
     pthread_condattr_setclock(&_timerAttr, CLOCK_MONOTONIC);
@@ -29,7 +29,7 @@ Heartbeat::Heartbeat(std::string host, int port) : Client(host, port, 0) {
 
 bool Heartbeat::_establishConnection() {
 
-    Message eMessage("Establish!", MessageType::EstablishConnection);
+    Message eMessage(getOwnerId(), "Establish!", MessageType::EstablishConnection);
     while(_retry > 0) {
 
         _status = Status::EstablishingConnection;
@@ -87,7 +87,7 @@ void Heartbeat::run() {
 
         while(_retry > 0) {
 
-            Message pingMessage("Ping", MessageType::Ping);
+            Message pingMessage(getOwnerId(), "Ping", MessageType::Ping);
 
             if (!_sendMessage(pingMessage)) {
 
@@ -101,7 +101,7 @@ void Heartbeat::run() {
                 std::string msg;
                 std::cout << "Ping" << std::endl;
 
-                if (_receiveWithTimeout(msg) == -1) {
+                if (_receiveWithTimeout(msg, 5) == -1) {
 
                     perror("Cannot Recieve Message!");
                     std::cerr << "Server Disconnected!" << std::endl;

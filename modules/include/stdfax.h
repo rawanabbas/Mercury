@@ -29,6 +29,13 @@
 #include <sys/select.h>
 #include <sys/file.h>
 
+#include <cryptopp/sha.h>
+#include <cryptopp/cryptlib.h>
+#include <cryptopp/hex.h>
+#include <cryptopp/aes.h>
+#include <cryptopp/filters.h>
+#include <cryptopp/osrng.h>
+
 #define END_COMMAND  "q"
 #define MAX_CONNECTIONS  5
 #define MAX_RECV  1024

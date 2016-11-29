@@ -6,6 +6,7 @@
 #include "thread.hpp"
 #include "client.hpp"
 #include "message.hpp"
+#include "user.hpp"
 
 enum class Status {
     EstablishingConnection,
@@ -28,7 +29,7 @@ class Heartbeat : public Client {
     void _resetTrials();
     bool _establishConnection();
 public:
-    Heartbeat(std::string host, int port);
+    Heartbeat(std::string ownerId, std::string host, int port);
 
     Status getStatus();
     void run();

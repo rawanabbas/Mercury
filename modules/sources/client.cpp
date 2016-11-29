@@ -9,17 +9,54 @@
 
 int Client::_id = 0;
 
-Client::Client(std::string host, int serverPort, int port) : Thread() {
+Client::Client(std::string ownerId, std::string host, int serverPort) : Thread(), _ownerId(ownerId) {
+
     if (!_sock.isValid()) {
+
         perror("Cannot create a client socket.");
+
     }
+
     if(!_sock.connect(_serverSocket, host, serverPort)) {
+
         perror("Cannot connect to the server.");
+
     }
+
+    _id++;
+}
+
+Client::Client(std::string hostname, int serverPort) : Thread(){
+
+    if (!_sock.isValid()) {
+
+        perror("Cannot create a client socket.");
+
+    }
+
+    if(!_sock.connect(_serverSocket, hostname, serverPort)) {
+
+        perror("Cannot connect to the server.");
+
+    }
+
     _id++;
 }
 
 Client::~Client() {
+}
+
+void Client::setCommand(std::string command) {
+    _lock();
+    _command.erase();
+    _command = command;
+    _unlock();
+}
+
+bool Client::isAuthenticated() {
+
+    return _isAuthenticated;
+
 }
 
 bool Client::_sendMessage(Message msg) {
@@ -35,8 +72,8 @@ bool Client::_receive(std::string &msg) {
     return _sock.recvFrom(_serverSocket, msg);
 }
 
-int Client::_receiveWithTimeout(std::string &msg) {
-    return _sock.recvWithTimeout(_serverSocket, msg);
+int Client::_receiveWithTimeout(std::string &msg, int timeout) {
+    return _sock.recvWithTimeout(_serverSocket, msg, timeout);
 }
 
 void Client::_updateServerSocket(int port, std::string host) {
@@ -46,7 +83,7 @@ void Client::_updateServerSocket(int port, std::string host) {
 void Client::_exit(std::string msg)
 {
     MessageType type = MessageType::Exit;
-    Message message(strdup(msg.c_str()), type);
+    Message message(_ownerId, strdup(msg.c_str()), type);
     if (!_sendMessage(message)) {
         perror("Cannot Send Message.");
     } else {
@@ -67,7 +104,7 @@ void Client::_exit(std::string msg)
 void Client::_ping(std::string serializedMsg)
 {
     MessageType type = MessageType::Ping;
-    Message message(serializedMsg, type);
+    Message message(_ownerId, serializedMsg, type);
     if (!_sendMessage(message)) {
         perror("Cannot Send Message.");
     } else {
@@ -86,6 +123,20 @@ void Client::_ping(std::string serializedMsg)
     }
 }
 
+bool Client::_lock() {
+    return pthread_mutex_lock(&_commandMutex);
+}
+
+bool Client::_unlock() {
+    return pthread_mutex_unlock(&_commandMutex);
+}
+
+void Client::_clearCommand() {
+    _lock();
+    _command.erase();
+    _unlock();
+}
+
 void Client::_openFile() {
     std::string fileName;
     std::cout << "Enter File Name: ";
@@ -93,7 +144,7 @@ void Client::_openFile() {
     std::cout << std::endl;
     File *file;
     file->setClientSocket(_sock);
-    FileStatus status = file->ropen(fileName, FileMode::ReadOnly, _serverSocket);
+    FileStatus status = file->ropen(_ownerId, fileName, FileMode::ReadOnly, _serverSocket);
     std::cout << "File Remote Open Status " << (int)status << std::endl;
     if (status == FileStatus::Opened) {
         std::cout << "File is open!" << std::endl;
@@ -108,7 +159,7 @@ bool Client::_createFile() {
     std::string fileName;
     std::cout <<"Enter File Name: ";
     std::cin >> fileName;
-    FileStatus status = remoteFile.rcreate(fileName, FileMode::ReadWrite, _serverSocket);
+    FileStatus status = remoteFile.rcreate(_ownerId, fileName, FileMode::ReadWrite, _serverSocket);
     std::cout << "Create Operation Status " << (int) status << std::endl;
     if (status == FileStatus::CreateOperationSuccess) {
         std::cout << "File " << fileName << " is created!" << std::endl;
@@ -123,7 +174,7 @@ bool Client::_createFile(File *remoteFile) {
     std::string fileName;
     std::cout <<"Enter File Name: ";
     std::cin >> fileName;
-    FileStatus status = remoteFile->rcreate(fileName, FileMode::ReadWrite, _serverSocket);
+    FileStatus status = remoteFile->rcreate(_ownerId, fileName, FileMode::ReadWrite, _serverSocket);
     std::cout << "Create Operation Status " << (int) status << std::endl;
     if (status == FileStatus::CreateOperationSuccess) {
         std::cout << "File " << fileName << " Remote Fd: "  << remoteFile->getFd() << " is created!" << std::endl;
@@ -135,7 +186,7 @@ bool Client::_createFile(File *remoteFile) {
 }
 
 bool Client::_createFile(File *remoteFile, std::string fileName) {
-    FileStatus status = remoteFile->rcreate(fileName, FileMode::ReadWrite, _serverSocket);
+    FileStatus status = remoteFile->rcreate(_ownerId, fileName, FileMode::ReadWrite, _serverSocket);
     std::cout << "Create Operation Status " << (int) status << std::endl;
     if (status == FileStatus::CreateOperationSuccess) {
         std::cout << "File " << fileName << " Remote Fd: " <<  remoteFile->getFd() << " is created!" << std::endl;
@@ -146,14 +197,13 @@ bool Client::_createFile(File *remoteFile, std::string fileName) {
     }
 }
 
-void Client::_readFile()
-{
+void Client::_readFile() {
     std::string fileName;
     std::cout << "Enter File Name: ";
     std::cin >> fileName;
     File file;
     file.setName(fileName);
-    FileStatus status = file.rread(_serverSocket);
+    FileStatus status = file.rread(_ownerId, _serverSocket);
     if (status == FileStatus::ReadOperationSuccess) {
         std::cout << "File is read!" << std::endl;
     } else {
@@ -161,8 +211,7 @@ void Client::_readFile()
     }
 }
 
-void Client::_sendFile()
-{
+void Client::_sendFile() {
     std::string fileName, buffer;
     std::cout << "Enter File Name: ";
     std::cin >> fileName;
@@ -176,7 +225,7 @@ void Client::_sendFile()
         while (!file.isEOF()) {
             buffer = file.read();
             std::cout << "Buffer Size: " << buffer.length() << std::endl;
-            status = remoteFile->rwrite("server/" + fileName, buffer, _serverSocket);
+            status = remoteFile->rwrite(_ownerId, "server/" + fileName, buffer, _serverSocket);
             if (status != FileStatus::WriteOperationSuccess) {
                 std::cout << "Couldn't send file!" << std::endl;
                 break;
@@ -190,8 +239,7 @@ void Client::_sendFile()
     }
 }
 
-void Client::_writeFile()
-{
+void Client::_writeFile() {
     std::string fileName, txt;
     std::cout << "Enter File Name: ";
     std::cin >> fileName;
@@ -206,8 +254,7 @@ void Client::_writeFile()
     }
 }
 
-void Client::_handleFile(std::string msg)
-{
+void Client::_handleFile(std::string msg) {
     std::cout << "What do you want to do with the file? (s) send file (r) remote read file (o) open remote file (w) write to remote file." << std::endl;
     std::cout << "Command: ";
     std::cin >> msg;
@@ -223,30 +270,145 @@ void Client::_handleFile(std::string msg)
         _sendFile();
     }
 }
+std::string Client::getOwnerId() const {
+    return _ownerId;
+}
+
+void Client::setOwnerId(const std::string &ownerId) {
+    _ownerId = ownerId;
+}
+
+
+void Client::_register() {
+
+    std::string username, password;
+    std::cout << "Enter Username: ";
+    std::cin >> username;
+    std::cout << "Enter Password: ";
+    std::cin >> password;
+
+    Message registerationMsg;
+    registerationMsg.setMessageType(MessageType::Register);
+    registerationMsg.setMessage("username: " + username + " password: " + password);
+
+    if (!_sendMessage(registerationMsg)) {
+
+        std::cout << "Unauthorized!" << std::endl;
+
+    } else {
+        std::string auth;
+
+        if(_receive(auth) != -1) {
+
+            Message authMessage = Message::deserialize(auth);
+
+            if(authMessage.getMessageType() == MessageType::Authenticated) {
+
+                _authStatus = ClientAuthenticationStatus::Authenticated;
+                _isAuthenticated = true;
+                _ownerId = authMessage.getMessage();
+
+                std::cout << "Authenticated!" << std::endl;
+
+            } else {
+
+                std::cout << "Unauthorized!" << std::endl;
+
+            }
+        }
+    }
+}
+
+void Client::_authenticate() {
+    _authStatus = ClientAuthenticationStatus::Authenticating;
+    std::string username, password;
+    std::cout << "Enter Username: ";
+    std::cin >> username;
+    std::cout << "Enter Password: ";
+    std::cin >> password;
+
+    Message signInMsg;
+    signInMsg.setMessageType(MessageType::Authenticate);
+    signInMsg.setMessage("username: " + username + " password: " + password);
+
+    if (!_sendMessage(signInMsg)) {
+
+        std::cout << "Unauthorized!" << std::endl;
+
+    } else {
+
+        std::string auth;
+
+        if(_receive(auth) != -1) {
+
+            Message authMessage = Message::deserialize(auth);
+
+            if(authMessage.getMessageType() == MessageType::Authenticated) {
+                _authStatus = ClientAuthenticationStatus::Authenticated;
+                _isAuthenticated = true;
+                _ownerId = authMessage.getMessage();
+
+                std::cout << "Authenticated!" << '\n';
+                std::cout << "Your ID: " << _ownerId;
+
+            } else {
+
+                _authStatus = ClientAuthenticationStatus::Unauthenticated;
+
+            }
+        }
+    }
+}
 
 void Client::_execute() {
+
     while(true) {
-        std::cout << "Enter Message: " ;
-        std::string msg;
-        std::cin >> msg;
-        if (msg == std::string(1, (char)Commands::Exit)) {
+
+//        std::cout << "Enter Message: " ;
+
+        if (_command == std::string(1, (char)Commands::Exit)) {
+
             std::cout << "---------------------------EXIT----------------------------" << std::endl;
-            _exit(msg);
+            _exit(_command);
             std::cout << "---------------------------EXIT----------------------------" << std::endl;
             break;
-        } else if (msg == std::string(1, (char)Commands::Ping)) {
+
+        } else if (_command == std::string(1, (char)Commands::Ping)) {
+
             std::cout << "---------------------------PING----------------------------" << std::endl;
-            _ping(msg);
+            _ping(_command);
             std::cout << "---------------------------PING----------------------------" << std::endl;
-        } else if (msg == std::string(1, (char)Commands::File)) {
+
+        } else if (_command == std::string(1, (char)Commands::File)) {
+
             std::cout << "---------------------------FILE----------------------------" << std::endl;
-            _handleFile(msg);
+            _handleFile(_command);
             std::cout << "---------------------------FILE----------------------------" << std::endl;
+
+        } else if (_command == std::string(1, (char)Commands::Register)) {
+
+            std::cout << "---------------------------REGISTER----------------------------" << std::endl;
+            _register();
+            std::cout << "---------------------------REGISTER----------------------------" << std::endl;
+
+        } else if (_command == std::string(1, (char)Commands::SignIn)) {
+
+            std::cout << "---------------------------SIGN-IN----------------------------" << std::endl;
+            _authenticate();
+            std::cout << "---------------------------SIGN-IN----------------------------" << std::endl;
+
         }
+        _clearCommand();
     }
     std::cout << "Bye!" << std::endl;
 }
 
 void Client::run () {
     _execute();
+}
+
+ClientAuthenticationStatus Client::getAuthStatus() {
+
+    return _authStatus;
+
 }

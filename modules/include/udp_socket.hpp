@@ -27,13 +27,17 @@ public:
 
     bool sendTo(UDPSocket& sock, std::string msg);
     bool sendMessageTo(UDPSocket& sock, Message message);
+
     int recvFrom(UDPSocket& sock, std::string &msg);
-    int recvWithTimeout(UDPSocket& sock, std::string &msg);
+    int recvWithTimeout(UDPSocket& sock, std::string &msg, int timeout = 2);
+
     bool connect(UDPSocket &sock, std::string host, int port);
 
     bool isValid();
+
     int getPortNumber();
     std::string getHost();
+
     void updateSocketInfo(int port, std::string host);
 };
 

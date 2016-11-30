@@ -13,12 +13,15 @@
 
 class UDPSocket {
 private:
+
+    std::string _host;
     int _sock;
     char _buffer[MAX_RECV];
     int _bytes;
     fd_set _fd;
     sockaddr_in _address;
     socklen_t _addressLength;
+
 public:
 
     UDPSocket (int port = 0);

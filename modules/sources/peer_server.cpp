@@ -43,21 +43,26 @@ User PeerServer::_parseAuthenticationMessage(Message &msg) {
     return user;
 }
 
-bool PeerServer::_authenticate(Message &msg, User *user) {
+bool PeerServer::_authenticate(Message &msg, std::string clientHost) {
 
     User aUser = _parseAuthenticationMessage(msg);
     User authUser = _db.fetch(aUser);
 
     if (aUser.isAuthenticated(authUser)) {
 
-        user = new User(aUser);
+        User *user = new User(aUser);
+        user->setIP(clientHost);
         msg.setMessage(user->getUserID());
         msg.setMessageType(MessageType::Authenticated);
+
+        lock();
+        _peers[user->getUserID()] = (Peer *)user;
+        release();
+
         return true;
 
     } else {
 
-        user = nullptr;
         msg.setMessage("Authentication Error!");
         msg.setMessageType(MessageType::Unauthorized);
         return false;
@@ -81,9 +86,10 @@ void PeerServer::_spawnTracker(UDPSocket clientSocket, User *user) {
 }
 
 void PeerServer::_addPeer(User *user) {
-    lock();
+//    lock();
+    std::cout << "Adding " << user->getUserID() << " @ " << user->getIP() << std::endl;
     _peers[user->getUserID()] = (Peer *)user;
-    release();
+//    release();
 }
 
 bool PeerServer::_register(Message msg, User *user) {
@@ -108,18 +114,18 @@ bool PeerServer::_register(Message msg, User *user) {
 
     }
 
-    _addPeer(user);
+    lock();
+    _peers[user->getUserID()] = (Peer *)user;
+    release();
+
     user->setPassword(password);
     user->setUsername(username);
 
 
-    std::cout << "UserID: " << user->getUserID() << std::endl;
     return _db.insert(*user);
 }
 
 void PeerServer::run() {
-
-    std::cout << "Peer Server listening on " << _sock.getPortNumber() << std::endl;
 
     while (_isRunning) {
 
@@ -129,20 +135,11 @@ void PeerServer::run() {
 
         if (_sock.recvFrom(clientSocket, serializedMsg) != -1) {
 
-            std::cout << "Client Socket: " << clientSocket.getPortNumber() << std::endl;
-            std::cout << "Messaged Received From  " << clientSocket.getHost() << ":" << clientSocket.getPortNumber() << "-> " << serializedMsg << std::endl;
-
             msg = Message::deserialize(serializedMsg);
 
             if (msg.getMessageType() == MessageType::Authenticate) {
 
-                User *user;
-
-                if(_authenticate(msg, user) && user != nullptr) {
-
-                    _addPeer(user);
-
-                }
+                _authenticate(msg, clientSocket.getHost());
 
                 _sock.sendMessageTo(clientSocket, msg);
 
@@ -152,8 +149,6 @@ void PeerServer::run() {
                 User *user = new User;
 
                 if (_register(msg, user)) {
-
-                    _addPeer(user);
 
                     msg.setMessage(user->getUserID());
                     msg.setMessageType(MessageType::Authenticated);
@@ -171,6 +166,7 @@ void PeerServer::run() {
 
                 User *user = new User;
                 user->setUserID(msg.getHeader("Owner-Id: "));
+
                 _spawnTracker(clientSocket, user);
 
             }
@@ -202,7 +198,7 @@ void PeerServer::_terminateTracker(Tracker *tracker) {
         (*it) -> join();
 
         _trackers.erase(it);
-
+        std::cout << "User: " << userID << " Info: " << _peers[userID]-> getIP() << std::endl;
         lock();
         _peers.erase(userID);
         release();

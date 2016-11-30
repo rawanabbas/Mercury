@@ -38,16 +38,20 @@ PeerMap Heartbeat::getPeers() {
 }
 
 void Heartbeat::_parsePeerList(std::string peerList) {
-    std::stringstream ss(peerList);
-    std::string peer;
 
-    while (ss >> peer) {
+    std::stringstream ss(peerList);
+    std::string peerStr;
+
+    std::cout << peerList << std::endl;
+
+    while (ss >> peerStr) {
 
         std::string userID, ip, username;
+        std::istringstream ssPeer(peerStr);
 
-        getline(ss, userID, ',');
-        getline(ss, ip, ',');
-        getline(ss, username, '\n');
+        std::getline(ssPeer, userID, ',');
+        std::getline(ssPeer, username, ',');
+        std::getline(ssPeer, ip);
 
         Peer *peer = new Peer(userID, ip, username);
 
@@ -57,6 +61,7 @@ void Heartbeat::_parsePeerList(std::string peerList) {
 }
 
 void Heartbeat::_queryPeers() {
+
     Message queryMessage(getOwnerId(), "Query!", MessageType::Query);
 
     if (!_sendMessage(queryMessage)) {
@@ -67,12 +72,15 @@ void Heartbeat::_queryPeers() {
     } else {
 
         std::string sPeerList;
+
         if (_receive(sPeerList) == -1) {
 
             perror("Cannot recieve the peering list!");
             std::cerr << "An error has occured, cannot recieve the peering list!" << std::endl;
 
         } else {
+
+            std::cout << "Results recieved!" << std::endl;
 
             Message resultMessage = Message::deserialize(sPeerList);
 
@@ -131,12 +139,10 @@ bool Heartbeat::_establishConnection() {
             return false;
 
         } else {
-            std::cout << "INFO RECIEVED: " << info << std::endl;
             Message message = Message::deserialize(info);
 
             if (message.getMessageType() == MessageType::Info) {
 
-                std::cout << "Updated Server Socket Info: " << message.getMessage() << std::endl;
                 _updateServerSocket(atoi(message.getMessage().c_str()), _serverSocket.getHost());
                 return true;
 
@@ -169,8 +175,6 @@ void Heartbeat::run() {
 
 
                     std::string msg;
-                    std::cout << "Ping" << std::endl;
-
 
                     int r;
 
@@ -182,13 +186,7 @@ void Heartbeat::run() {
                     if (r == -1 && _retry == 0) {
 
                         perror("Cannot Recieve Message!");
-                        std::cerr << "Server Disconnected!" << std::endl;
                         break;
-
-                    } else {
-
-                        std::cout << "MESSAGE: " << msg << std::endl;
-                        std::cout << "Pong!" << std::endl;
 
                     }
 
@@ -208,7 +206,7 @@ void Heartbeat::run() {
 
     }
 
-    std::cout << "Heartbeat Stopped, Server " << _serverSocket.getHost() << ":" << _serverSocket.getPortNumber() << " is unreachable" << std::endl;
+    std::cout << "Heartbeat Stopped, Server " << _sock.getHost() << ":" << _sock.getPortNumber() << " is unreachable" << std::endl;
 
 }
 

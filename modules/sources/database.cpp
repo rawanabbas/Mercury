@@ -23,7 +23,7 @@ Database::Database(std::string name) : _name(name) {
 bool Database::_create() {
 
     char *error;
-    std::string sql = "CREATE TABLE IF NOT EXISTs Users(id INTEGER PRIMARY KEY, username TEXT NOT NULL UNIQUE, password TEXT NOT NULL, userID TEXT NOT NULL UNIQUE);";
+    std::string sql = "CREATE TABLE IF NOT EXISTs Users(id INTEGER PRIMARY KEY, username TEXT NOT NULL, password TEXT NOT NULL, userID TEXT NOT NULL, CONSTRAINT username_constraint UNIQUE(username));";
 
     if(sqlite3_exec(_db, sql.c_str(), NULL, 0, &error) != SQLITE_OK) {
 

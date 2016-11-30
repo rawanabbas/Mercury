@@ -10,7 +10,7 @@ bool Steganography::_embedData(std::string file, std::string data, std::string s
 
     std::string command = SteganographyCommand + " embed -ef " + data + " -cf " + file + " -p " + secret;
 
-    if (system(command) != -1) {
+    if (system(command.c_str()) != -1) {
 
         std::cout << "Data is now hidded!" << std::endl;
         return true;
@@ -29,7 +29,7 @@ bool Steganography::_extractData(std::string src, std::string destination, std::
 
     std::string command = SteganographyCommand + " extract -sf " + src + " -xf " + destination + " -p " + secret;
 
-    if (system(command) != -1) {
+    if (system(command.c_str()) != -1) {
 
         std::cout << "The data is now available at " << destination << std::endl;
         return true;
@@ -51,7 +51,7 @@ bool Steganography::embedImage(std::string original, std::string secretImage, st
 
         std::string command = SteganographyCommand + " embed -ef " + secretImage + " -cf " + original + " -p " + secret + " -sf " + destination;
 
-        if (system(command) != -1) {
+        if (system(command.c_str()) != -1) {
 
             std::cout << "The data is now available at " << destination << std::endl;
             return true;
@@ -74,7 +74,7 @@ bool Steganography::extractImage(std::string src, std::string destination, std::
 
     std::string command = SteganographyCommand + " extract -sf " + src + " -xf " + destination + " -p " + secret;
 
-    if(system(command) != -1) {
+    if(system(command.c_str()) != -1) {
 
         std::cout << "The data is now available at " << destination << std::endl;
         return true;
@@ -91,6 +91,8 @@ bool Steganography::extractImage(std::string src, std::string destination, std::
 
 bool Steganography::incrementViews(std::string image, std::string userId, std::string secret) {
 
+    //TODO
+
     if (extractImage(image, "secretImage.jpg", secret)) {
 
         if (_extractData("secretImage.jpg", "views.txt", secret)) {
@@ -105,7 +107,7 @@ bool Steganography::incrementViews(std::string image, std::string userId, std::s
 }
 
 bool Steganography::decrementViews(std::string image, std::string userId) {
-
+    return true;
 }
 
 

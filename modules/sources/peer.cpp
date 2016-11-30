@@ -40,6 +40,7 @@ std::string Peer::getUsername() const {
 
 void Peer::setUsername(const std::string &value) {
     _username = value;
+    _generateID();
 }
 
 

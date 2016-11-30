@@ -23,7 +23,7 @@ enum class Commands : char {
     OpenFile = 'o',
     CreateFile = 'c',
     Text = 't',
-    Register = 'r',
+    Register = 'g',
     SignIn = 'a',
     Ping = 'p'
 };

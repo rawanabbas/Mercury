@@ -29,7 +29,7 @@ class PeerServer : public Thread {
 
     User _parseAuthenticationMessage(Message &msg);
 
-    bool _authenticate(Message &msg, User *user);
+    bool _authenticate(Message &msg, std::string clientHost);
     bool _register(Message msg, User *user);
 
     void _addPeer(User *user);

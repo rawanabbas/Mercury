@@ -41,21 +41,34 @@ bool File::unlock() {
 }
 
 void File::parseDetails(std::string details, std::string data) {
+
     std::stringstream ss(details);
     std::string token;
+
     while (ss >> token) {
+
         if (token == FileModeToken) {
+
             int mode;
             ss >> mode;
             _mode = (FileMode) mode;
+
         } else if (token == FileNameToken) {
+
             ss >> _name;
+
         } else if (token == DecodedLengthToken) {
+
             ss >> _decodedLength;
+
         } else if (token == WriteDataToken) {
+
             ss >> data;
+
         } else if (token == FileDescriptorToken) {
+
             ss >> _fd;
+
         }
     }
 }

@@ -95,6 +95,7 @@ void Tracker::_pulse() {
             } else if (_msg.getMessageType() == MessageType::Query) {
                 //TODO
                 lock();
+
                 std::string peerList = "";
                 std::map<std::string, Peer*>::iterator it;
 
@@ -104,13 +105,16 @@ void Tracker::_pulse() {
 
                 }
 
+
                 release();
+
+                std::cout << "Peer-List: " << peerList << std::endl;
 
                 _msg.setMessageType(MessageType::Result);
                 _msg.addHeader("Owner-Id: ", "Tracker-" + std::to_string(getThreadId()));
                 _msg.setMessage(peerList);
 
-                if (_serverSocket.sendMessageTo(_clientSocket, _msg)) {
+                if (!_serverSocket.sendMessageTo(_clientSocket, _msg)) {
 
                     perror("Cannot send peer list! Client may be offline.");
 
@@ -126,5 +130,5 @@ void Tracker::_pulse() {
         }
     }
 
-    std::cout << "Beating has stopped for " << _clientSocket.getHost() << ":" << _clientSocket.getPortNumber() << std::endl;
+    std::cout << "Beating has stopped for " << _serverSocket.getHost() << ":" << _serverSocket.getPortNumber() << std::endl;
 }

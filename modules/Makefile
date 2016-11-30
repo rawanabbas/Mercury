@@ -91,7 +91,7 @@ MKDIR_BUILD = $(MKDIR) $(BUILD_DIR)
 all: pre server client app peering
 
 pre:
-	$(MKDIR_BUILD); $(MKDIR_BINARY); $(MKDIR_BINARY)
+	$(MKDIR_BUILD); $(MKDIR_BINARY); $(MKDIR_OBJS);
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(CC) -c $< $(INCLUDE) -o $(OBJ_DIR)/$(notdir $@)  $(CFLAGS)

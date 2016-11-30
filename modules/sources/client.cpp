@@ -383,7 +383,7 @@ void Client::setOwnerId(const std::string &ownerId) {
 
 
 void Client::_register() {
-
+    _authStatus = ClientAuthenticationStatus::Authenticating;
     std::string username, password;
 
     std::cout << "Enter Username: ";
@@ -395,6 +395,8 @@ void Client::_register() {
     Message registerationMsg;
     registerationMsg.setMessageType(MessageType::Register);
     registerationMsg.setMessage("username: " + username + " password: " + password);
+
+    std::cout << "Registeration Message Formulated!" << std::endl;
 
     if (!_sendMessage(registerationMsg)) {
 
@@ -417,10 +419,16 @@ void Client::_register() {
                 std::cout << "Authenticated!" << std::endl;
 
             } else {
-
+                _authStatus = ClientAuthenticationStatus::Unauthenticated;
+                _isAuthenticated = false;
                 std::cout << "Unauthorized!" << std::endl;
 
             }
+        } else {
+            perror("Cannot recieve reply!");
+            _authStatus = ClientAuthenticationStatus::Unauthenticated;
+            _isAuthenticated = false;
+            std::cout << "Unauthorized!" << std::endl;
         }
     }
 }

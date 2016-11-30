@@ -16,6 +16,7 @@ class ConnectionManager : public Heartbeat {
 
     PeerMap _peers;
     Message _queryMessage;
+    pthread_mutex_t _peerMutex;
 
     void _queryPeers();
     void _parsePeerList(std::string peerList);

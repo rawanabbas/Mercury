@@ -8,6 +8,9 @@ ConnectionManager::ConnectionManager(std::string ownerId, std::string host, int 
     _queryMessage.setMessage("Query");
     _queryMessage.addHeader("Owner-Id", ownerId);
 
+    pthread_mutex_init(_peerMutex, NULL);
+    setMutex(_peerMutex);
+
 }
 
 Peer ConnectionManager::getPeer(std::string userID) {
@@ -84,7 +87,9 @@ void ConnectionManager::_parsePeerList(std::string peerList) {
 
         Peer *peer = new Peer(userID, ip, username);
 
+        lock();
         _peers[userID] = peer;
+        release();
 
     }
 }

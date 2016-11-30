@@ -8,7 +8,7 @@ ConnectionManager::ConnectionManager(std::string ownerId, std::string host, int 
     _queryMessage.setMessage("Query");
     _queryMessage.addHeader("Owner-Id", ownerId);
 
-    pthread_mutex_init(_peerMutex, NULL);
+    pthread_mutex_init(&_peerMutex, NULL);
     setMutex(_peerMutex);
 
 }

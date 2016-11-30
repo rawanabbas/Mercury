@@ -25,6 +25,7 @@ User PeerServer::_parseAuthenticationMessage(Message &msg) {
     std::stringstream ss(msg.getMessage());
     std::string token;
     while(ss >> token) {
+
         if (token == UsernameToken) {
 
             std::string username;
@@ -127,7 +128,7 @@ bool PeerServer::_register(Message msg, User *user) {
 
 void PeerServer::run() {
 
-    while (_isRunning) {
+    while (true) {
 
         UDPSocket clientSocket;
         std::string serializedMsg;
@@ -173,6 +174,10 @@ void PeerServer::run() {
         }
 
     }
+
+    std::cout << "Peer Server Shutdown!" << std::endl;
+    std::cout << "Bye-Bye!" << std::endl;
+
 }
 
 
@@ -198,10 +203,14 @@ void PeerServer::_terminateTracker(Tracker *tracker) {
         (*it) -> join();
 
         _trackers.erase(it);
-        std::cout << "User: " << userID << " Info: " << _peers[userID]-> getIP() << std::endl;
-        lock();
-        _peers.erase(userID);
-        release();
+
+        if (_peers.find(userID) != _peers.end()) {
+            std::cout << "User: " << userID << " Info: " << _peers[userID]-> getIP() << std::endl;
+            lock();
+            _peers.erase(userID);
+            release();
+
+        }
 
     }
 }

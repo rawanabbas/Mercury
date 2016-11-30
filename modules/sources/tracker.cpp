@@ -74,7 +74,7 @@ void Tracker::_pulse() {
 
     while(true) {
 
-        if (_serverSocket.recvWithTimeout(_clientSocket, serializedMsg, 5) != -1) {
+        if (_serverSocket.recvWithTimeout(_clientSocket, serializedMsg, 40) != -1) {
             _msg = Message::deserialize(serializedMsg);
 
             if(_msg.getMessageType() == MessageType::Ping) {

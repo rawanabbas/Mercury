@@ -31,7 +31,7 @@ SOURCES += main.cpp\
 #    modules/sources/server_main.cpp \
     modules/sources/socket_exception.cpp \
     modules/sources/thread.cpp \
-#    modules/sources/peer_server.cpp \
+    modules/sources/peer_server.cpp \
     modules/sources/udp_socket.cpp \
     modules/sources/decoder.cpp \
 #    modules/sources/user.cpp \
@@ -49,7 +49,7 @@ HEADERS  += mainwindow.h \
     modules/include/logger.hpp \
     modules/include/message.hpp \
     modules/include/peer.hpp \
-#    modules/include/peer_server.hpp \
+    modules/include/peer_server.hpp \
     modules/include/server.hpp \
     modules/include/socket_exception.hpp \
     modules/include/thread.hpp \

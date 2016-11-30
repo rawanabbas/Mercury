@@ -21,7 +21,7 @@ void Heartbeat::_resetTrials() {
 
 }
 
-Heartbeat::Heartbeat(std::string ownerId, std::string host, int port) : Client(ownerId, host, port), _query(false) {
+Heartbeat::Heartbeat(std::string ownerId, std::string host, int port) : Client(ownerId, host, port) {
 
     pthread_condattr_init(&_timerAttr);
     pthread_condattr_setclock(&_timerAttr, CLOCK_MONOTONIC);
@@ -31,76 +31,6 @@ Heartbeat::Heartbeat(std::string ownerId, std::string host, int port) : Client(o
 
     _resetTrials();
 
-}
-
-PeerMap Heartbeat::getPeers() {
-    return _peers;
-}
-
-void Heartbeat::_parsePeerList(std::string peerList) {
-
-    std::stringstream ss(peerList);
-    std::string peerStr;
-
-    std::cout << peerList << std::endl;
-
-    while (ss >> peerStr) {
-
-        std::string userID, ip, username;
-        std::istringstream ssPeer(peerStr);
-
-        std::getline(ssPeer, userID, ',');
-        std::getline(ssPeer, username, ',');
-        std::getline(ssPeer, ip);
-
-        Peer *peer = new Peer(userID, ip, username);
-
-        _peers[userID] = peer;
-
-    }
-}
-
-void Heartbeat::_queryPeers() {
-
-    Message queryMessage(getOwnerId(), "Query!", MessageType::Query);
-
-    if (!_sendMessage(queryMessage)) {
-
-        perror("Cannot Send Messages!");
-        std::cerr << "An error has occured, cannot send messages!" << std::endl;
-
-    } else {
-
-        std::string sPeerList;
-
-        if (_receive(sPeerList) == -1) {
-
-            perror("Cannot recieve the peering list!");
-            std::cerr << "An error has occured, cannot recieve the peering list!" << std::endl;
-
-        } else {
-
-            std::cout << "Results recieved!" << std::endl;
-
-            Message resultMessage = Message::deserialize(sPeerList);
-
-            if (resultMessage.getMessageType() == MessageType::Result) {
-
-                std::string peerList = resultMessage.getMessage();
-
-                _parsePeerList(peerList);
-
-            } else {
-
-                std::cout << "Cannot understand response!" << std::endl;
-            }
-        }
-
-    }
-}
-
-void Heartbeat::queryPeers() {
-    _query = true;
 }
 
 bool Heartbeat::_establishConnection() {
@@ -162,42 +92,34 @@ void Heartbeat::run() {
 
         while(_retry > 0) {
 
-            if (!_query) {
+            Message pingMessage(getOwnerId(), "Ping", MessageType::Ping);
 
-                Message pingMessage(getOwnerId(), "Ping", MessageType::Ping);
+            if (!_sendMessage(pingMessage)) {
 
-                if (!_sendMessage(pingMessage)) {
-
-                    perror("Cannot Send Message!");
-                    _retry--;
-
-                } else {
-
-
-                    std::string msg;
-
-                    int r;
-
-                    while (((r = _receiveWithTimeout(msg, 5)) == -1) && (_retry > 0)) {
-                        std::cout << "Cannot recieve retrying!" << std::endl;
-                        _retry--;
-                    }
-
-                    if (r == -1 && _retry == 0) {
-
-                        perror("Cannot Recieve Message!");
-                        break;
-
-                    }
-
-                }
+                perror("Cannot Send Message!");
+                _retry--;
 
             } else {
 
-                _queryPeers();
-                _query = false;
+
+                std::string msg;
+
+                int r;
+
+                while (((r = _receiveWithTimeout(msg, 5)) == -1) && (_retry > 0)) {
+                    std::cout << "Cannot recieve retrying!" << std::endl;
+                    _retry--;
+                }
+
+                if (r == -1 && _retry == 0) {
+
+                    perror("Cannot Recieve Message!");
+                    break;
+
+                }
 
             }
+
 
             _resetTrials();
             _wait(2);

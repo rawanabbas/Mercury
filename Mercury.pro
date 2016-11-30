@@ -17,7 +17,7 @@ PRECOMPILED_HEADER = modules/include/stdafx.h
 
 SOURCES += main.cpp\
     mainwindow.cpp \
-#    modules/sources/app.cpp \
+    modules/sources/app.cpp \
     modules/sources/client.cpp \
 #    modules/sources/client_main.cpp \
     modules/sources/connection_manager.cpp \

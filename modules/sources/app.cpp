@@ -3,6 +3,7 @@
 #include "client.hpp"
 #include "peer.hpp"
 #include "heartbeat.hpp"
+#include "connection_manager.hpp"
 
 int main(int argc, char const *argv[]) {
 
@@ -32,31 +33,19 @@ int main(int argc, char const *argv[]) {
 
         ownerId = authClient.getOwnerId();
 
-        Heartbeat heartbeat(ownerId, argv[1], atoi(argv[2]));
+        Heartbeat heartbeat(ownerId, argv[1], std::stoi(argv[2]));
+        ConnectionManager manager(ownerId, argv[1], std::stoi(argv[2]));
         Server server(ownerId, 3001);
 
 
         server.start();
         heartbeat.start();
+        manager.start();
 
-        std::cout << "Now, Query Peering Server?";
-        std::cin >> msg;
-        std::cout << "Message: " << msg;
-
-        if (msg == "y") {
-
-            heartbeat.queryPeers();
-            std::map<std::string, Peer*> peers = heartbeat.getPeers();
-            std::map<std::string, Peer*>::iterator it = peers.begin();
-            for (it; it != peers.end(); it++) {
-                std::cout << "User: " << it -> first << " is Connected!" << std::endl;
-            }
-
-        }
-
-        server.join();
         authClient.join();
         heartbeat.join();
+        manager.join();
+        server.join();
 
     } else {
 

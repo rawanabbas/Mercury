@@ -63,11 +63,8 @@ int UDPSocket::recvFrom(UDPSocket &sock, std::string &msg) {
 
     }
 
-    char* host = inet_ntoa(sock._address.sin_addr);
-    std::cout << "recvFrom() IP: " << host << std::endl;
+    sock._host = std::string(inet_ntoa(sock._address.sin_addr));
 
-
-//    std::cout << "Bytes recieved: " << _bytes << std::endl;
 
     if (_bytes > MAX_RECV) {
 
@@ -110,10 +107,8 @@ int UDPSocket::recvWithTimeout(UDPSocket& sock, std::string &msg, int timeout) {
 
         }
 
-        char* host = inet_ntoa(sock._address.sin_addr);
-        std::cout << "IP: " << host << std::endl;
+        sock._host = std::string(inet_ntoa(sock._address.sin_addr));
 
-//        std::cout << "Bytes recieved: " << _bytes << std::endl;
 
         if (_bytes > MAX_RECV) {
 
@@ -151,7 +146,8 @@ int UDPSocket::getPortNumber() {
 std::string UDPSocket::getHost() {
     char host [200];
     inet_ntop(AF_INET, &(_address.sin_addr), host, INET_ADDRSTRLEN);
-    return std::string(host);
+
+    return _host;
 }
 
 bool UDPSocket::isValid() {

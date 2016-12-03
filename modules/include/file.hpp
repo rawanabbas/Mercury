@@ -30,11 +30,6 @@ enum class FileMode {
 class File {
 private:
     static int _id;
-    static const std::string FileDescriptorToken;
-    static const std::string FileNameToken;
-    static const std::string FileModeToken;
-    static const std::string DecodedLengthToken;
-    static const std::string WriteDataToken;
 
     FileDescriptor _fd;
 
@@ -49,24 +44,27 @@ private:
     std::string _name;
     int _decodedLength;
 
+    std::vector<std::string> _reciepents;
+
 public:
 
-    File (bool local = false, std::string dir = "../../files/");
+    File();
+    File (bool local, std::string dir);
 
     FileStatus create(std::string name, FileMode mode = FileMode::Undefined);
-    FileStatus rcreate(std::string ownerId, std::string name, FileMode mode, UDPSocket server);
+    FileStatus rcreate(std::string ownerId, std::string username, std::string name, FileMode mode, UDPSocket server);
 
     FileStatus open(std::string path, FileMode mode);
-    FileStatus ropen(std::string ownerId, std::string path, FileMode mode, UDPSocket server);
+    FileStatus ropen(std::string ownerId, std::string username, std::string path, FileMode mode, UDPSocket server);
 
     std::string read();
-    FileStatus rread(std::string ownerId, UDPSocket server);
+    FileStatus rread(std::string ownerId, std::string username, UDPSocket server);
 
     FileStatus write(std::string str);
     FileStatus write(std::string str, unsigned int length);
     FileStatus write(std::string name, std::string str, unsigned int length);
-    FileStatus rwrite(std::string ownerId, std::string name, std::string txt, UDPSocket server);
-    FileStatus rwrite(std::string ownerId, std::string txt, UDPSocket server);
+    FileStatus rwrite(std::string ownerId, std::string username, std::string name, std::string txt, UDPSocket server);
+    FileStatus rwrite(std::string ownerId, std::string username, std::string txt, UDPSocket server);
 
     FileStatus close();
     FileStatus rclose();
@@ -102,9 +100,13 @@ public:
     int getFd() const;
     void setFd(int fd);
 
-    virtual ~File ();
-
     int getDecodedLength() const;
     void setDecodedLength(int decodedLength);
+
+    std::string getDirectory() const;
+    void setDirectory(const std::string &dir);
+
+    virtual ~File ();
+
 };
 #endif //FILE_HPP

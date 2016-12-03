@@ -53,6 +53,7 @@ public:
 
     void setDoneCallback(ThreadCallback, void * parent = NULL);
     void setParent(void *parent);
+
     long getThreadId ();
 
     bool isRunning();

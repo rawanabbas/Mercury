@@ -15,7 +15,7 @@ std::string toString (int i) {
 
 int Job::_id = 0;
 
-Job::Job(std::string ownerId, UDPSocket sock): _clientSocket(sock), _ownerId(ownerId), Thread() {
+Job::Job(std::string ownerId, std::string username, UDPSocket sock): _clientSocket(sock), _ownerId(ownerId), _username(username), Thread() {
     _id++;
 }
 
@@ -25,7 +25,7 @@ Job::~Job() {
 
 
 bool Job::_sendInfo () {
-    if (!_serverSocket.sendMessageTo(_clientSocket, Message(_ownerId, std::to_string(_serverSocket.getPortNumber()), MessageType::Info))) {
+    if (!_serverSocket.sendMessageTo(_clientSocket, Message(_ownerId, _username, std::to_string(_serverSocket.getPortNumber()), MessageType::Info))) {
         perror("Cannot Send the New Socket!");
         return false;
     } else {
@@ -42,30 +42,32 @@ int Job::getJobId() const {
 void Job::_openFile(Message message) {
     std::cout << "Opening File ..." << std::endl;
     File *file = new File;
-//    file->parseDetails(message.getMessage());
 
-    file->setFd(std::stoi(message.getHeader("File-Descriptor:")));
-    file->setMode((FileMode) std::stoi(message.getHeader("File-Mode:")));
-    file->setName(message.getHeader("File-Name"));
-    file->setDecodedLength(std::stoi(message.getHeader("Decoded-Length")));
+    file->setFd(std::stoi(message.getHeader(Message::FileDescriptorToken)));
+    file->setMode((FileMode) std::stoi(message.getHeader(Message::FileModeToken)));
+    file->setName(message.getHeader(Message::FileNameToken));
+
+    file->setDirectory(message.getHeader(Message::UsernameToken));
 
     ReplyType replyType = file->open(file->getName(), file->getMode()) == FileStatus::Opened ? ReplyType::Success : ReplyType::Failure;
 
     message.setReplyType(replyType);
-    message.addHeader("File-Descriptor: ", std::to_string((int)file->getFd()));
+    message.addHeader(Message::FileDescriptorToken, std::to_string((int)file->getFd()));
 
     _files.insert(std::pair<FileDescriptor, File*>(file->getFd(), file));
 }
 
 void Job::_createFile(Message &message) {
+
+    std::cout << "Serialized Message: " << message.serialize() << std::endl;
     File *file = new File;
 
-//    file->parseDetails(message.getMessage());
+    file->setMode((FileMode) std::stoi(message.getHeader(Message::FileModeToken)));
+    file->setName(message.getHeader(Message::FileNameToken));
 
-    file->setFd(std::stoi(message.getHeader("File-Descriptor:")));
-    file->setMode((FileMode) std::stoi(message.getHeader("File-Mode:")));
-    file->setName(message.getHeader("File-Name"));
-    file->setDecodedLength(std::stoi(message.getHeader("Decoded-Length")));
+    mkdir(message.getHeader(Message::UsernameToken).c_str(), S_IRWXO | S_IRWXU | S_IRWXG);
+
+    file->setDirectory(message.getHeader(Message::UsernameToken));
 
     FileStatus status = file->create(file->getName(), file->getMode());
 
@@ -77,7 +79,7 @@ void Job::_createFile(Message &message) {
 
         message.setReplyType(ReplyType::Success);
         message.setMessage("FD: " + std::to_string((int)file->getFd()));
-        message.addHeader("File-Descriptor: ", std::to_string(file->getFd()));
+        message.addHeader(Message::FileDescriptorToken, std::to_string(file->getFd()));
 
         std::cout << "FD: " << file->getFd() << std::endl;
 
@@ -97,10 +99,11 @@ void Job::_readFile(Message &message) {
     std::string buffer;
     FileDescriptor fd;
 
-    fd = std::stoi(message.getHeader("File-Descriptor:"));
+    fd = std::stoi(message.getHeader(Message::FileDescriptorToken));
 
     File *file = _files[fd];
 
+    file->setDirectory(message.getHeader(Message::UsernameToken));
     buffer = file->read();
 
     message.setMessageType(MessageType::Reply);
@@ -114,9 +117,9 @@ void Job::_writeFile(Message &message) {
     std::cout << "Writing File ..." << std::endl;
     std::cout << "Message Size: " << message.getMessageSize() << std::endl;
 
-    FileDescriptor fd = std::stoi(message.getHeader("File-Descriptor:"));
-    FileMode mode = (FileMode) std::stoi(message.getHeader("File-Mode:"));
-    std::string fileName = message.getHeader("File-Name:");
+    FileDescriptor fd = std::stoi(message.getHeader(Message::FileDescriptorToken));
+    FileMode mode = (FileMode) std::stoi(message.getHeader(Message::FileModeToken));
+    std::string fileName = message.getHeader(Message::FileNameToken);
     std::string bytes = message.getMessage();
 
 //    File::parse(message.getMessage(), fd, fileName, mode, bytes);
@@ -127,19 +130,23 @@ void Job::_writeFile(Message &message) {
 
     if  (file != NULL) {
 
-        FileStatus status = file->write(fileName, bytes, bytes.size());
+        file->setDirectory(message.getHeader(Message::UsernameToken));
+
+//        std::cout << "header-file-name: " << message.getHeader(Message::FileNameToken);
+
+        FileStatus status = file->write(message.getHeader(Message::FileNameToken), bytes, bytes.size());
 
         if (status == FileStatus::WriteOperationSuccess) {
 
             message.setMessage("Text is written to file!");
             message.setReplyType(ReplyType::Success);
-            message.editHeader("Owner-Id: ", _ownerId);
+            message.editHeader(Message::OwnerIdToken, _ownerId);
 
         } else {
 
             message.setMessage("Text is written to file failure!");
             message.setReplyType(ReplyType::Failure);
-            message.editHeader("Owner-Id: ", _ownerId);
+            message.editHeader(Message::OwnerIdToken, _ownerId);
 
         }
     } else {
@@ -246,6 +253,8 @@ void Job::_listen() {
         std::cout << "Job listening loop..." << std::endl;
 
         if (_serverSocket.recvFrom(_clientSocket, serializedMsg) != -1) {
+
+            std::cout << serializedMsg << std::endl;
 
             Message message = Message::deserialize(serializedMsg);
 

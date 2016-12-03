@@ -7,53 +7,155 @@
 
 int main(int argc, char const *argv[]) {
 
-    std::string ownerId;
 
     if (argc < 3) {
         std::cerr << "Usage: " << argv[0] << " <server_ip> <port>" << std::endl;
         exit(1);
     }
 
-    std::string msg;
+    //    std::string msg;
 
     std::cout << "Let's Authenticate!" << std::endl;
-    std::cout << "Register Or Signin: ";
-    std::cin >> msg;
 
-    Client authClient(argv[1], atoi(argv[2]));
+    std::string host = argv[1];
+    int port = atoi(argv[2]);
+
+    Client authClient(host, port);
 
     authClient.start();
-    authClient.setCommand(msg);
 
-    while(authClient.getAuthStatus() == ClientAuthenticationStatus::Authenticating);
-
-
-    if(authClient.isAuthenticated() && authClient.getAuthStatus() == ClientAuthenticationStatus::Authenticated) {
+    authClient.setCommand(std::string(1, (char)Commands::SignIn), [](void* client) -> void {
 
 
-        ownerId = authClient.getOwnerId();
+        if (((Client*) client) -> getStatus() != ClientStatus::Authenticated) {
+            std::cout << "Unauthorized!" << std::endl;
+        } else {
 
-        Heartbeat heartbeat(ownerId, argv[1], std::stoi(argv[2]));
-        ConnectionManager manager(ownerId, argv[1], std::stoi(argv[2]));
-        Server server(ownerId, 3001);
+            std::string ownerId = ((Client*) client) -> getOwnerId();
+            std::string username = ((Client*) client) -> getUsername();
+            std::string host = ((Client*) client) -> getHost();
+            int port = ((Client*) client) -> getServerPort();
+
+            Heartbeat heartbeat(ownerId, username, host, port);
+            ConnectionManager manager(ownerId, username, host, port);
+            Server server(ownerId, username, 3001);
+
+            server.start();
+            heartbeat.start();
+            manager.start();
+
+            PeerMap peers = manager.getPeers();
+
+            if (peers.size()) {
+
+                PeerMap::iterator it;
+                int index = 0;
+
+                for (it = peers.begin(); it != peers.end(); ++it) {
+                    std::cout << ++index << " : " << it -> first <<  " IP: " << it -> second -> getIP() << std::endl;
+                }
+
+                std::cout << "A random client has been selected for sending the file!"
+                          << "\nClient Username: " << peers.begin() -> second -> getUsername() << std::endl;
+
+                Client sClient(ownerId, username, peers[peers.begin() -> first] -> getIP(), 3002);
 
 
-        server.start();
-        heartbeat.start();
-        manager.start();
+                sClient.start();
 
-        authClient.join();
-        heartbeat.join();
-        manager.join();
-        server.join();
+                std::cout << "A client has been created to send an image to!" << std::endl;
 
-    } else {
+                sClient.setCommand(std::string(1, (char)Commands::EstablishConnection), [=](void *client) {
 
-        std::cout << "Not Authenticated!" << std::endl;
-        std::cout << "NOW EXITING!" << std::endl;
-        std::cout << "Bye!" << std::endl;
+                    ((Client *) client)->setCommand(std::string(1, (char)Commands::File), [=](void *aClient) {
 
-    }
+                        ((Client *) aClient)->setCommand(std::string(1, (char)Commands::SendFile), [=](void *client) {
+
+                            std::cout << "Sending File" << std::endl;
+
+                        });
+
+                    });
+
+                });
+
+                sClient.join();
+
+            } else {
+
+                std::cerr << "An error has occured while fetching peers or no peers connected!" << std::endl;
+
+            }
+
+            heartbeat.join();
+            manager.join();
+            server.join();
+
+        }
+    });
+
+
+
+    //    if(authClient.isAuthenticated() && authClient.getStatus() == ClientStatus::Authenticated) {
+
+
+    //        ownerId = authClient.getOwnerId();
+
+    //        Heartbeat heartbeat(ownerId, argv[1], std::stoi(argv[2]));
+    //        ConnectionManager manager(ownerId, argv[1], std::stoi(argv[2]));
+    //        Server server(ownerId, 3001);
+
+
+    //        server.start();
+    //        heartbeat.start();
+    //        manager.start();
+
+
+    //        while(manager.getStatus() != ManagerStatus::FetcheedPeers);
+
+
+    //        PeerMap peers = manager.getPeers();
+    //        PeerMap::iterator it = peers.begin();
+    //        int index = 0;
+
+
+    //        for (it = peers.begin(); it != peers.end(); ++it) {
+
+    //            std::cout << ++index << " : " << it -> first <<  " IP: " << it -> second -> getIP() << std::endl;
+
+    //        }
+
+
+    //        if (peers.find(peers.begin() -> first) != peers.end()) {
+
+    //            Client sClient(ownerId, peers[peers.begin() -> first] -> getIP(), 3301);
+
+    //            sClient.start();
+    //            std::cout << "A client has been created to send an image to!" << std::endl;
+    //            sClient.setCommand(std::string(1, (char)Commands::Ping));
+    //            sClient.setCommand(std::string(1, (char)Commands::File));
+    //            sClient.setCommand(std::string(1, (char)Commands::SendFile));
+
+    //            sClient.join();
+
+    //        } else {
+
+    //            std::cout << "DOESNT EXIST!!" << std::endl;
+
+    //        }
+
+
+
+
+    authClient.join();
+
+    //    } else {
+
+    //        std::cout << "Not Authenticated!" << std::endl;
+    //        std::cout << "NOW EXITING!" << std::endl;
+    //        std::cout << "Bye!" << std::endl;
+
+    //    }
 
 
 

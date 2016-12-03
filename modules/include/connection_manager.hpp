@@ -11,8 +11,17 @@
 
 typedef std::map<std::string, Peer*> PeerMap;
 
+enum class ManagerStatus {
+    FetchingPeers,
+    FetcheedPeers,
+    Connected,
+    Error
+};
+
 class ConnectionManager : public Heartbeat {
 
+
+    ManagerStatus _mStatus;
 
     PeerMap _peers;
     Message _queryMessage;
@@ -23,9 +32,13 @@ class ConnectionManager : public Heartbeat {
 
 public:
 
-    ConnectionManager(std::string ownerId, std::string host, int port);
+    ConnectionManager(std::string ownerId, std::string username, std::string host, int port);
 
     Peer getPeer(std::string userID);
+    PeerMap getPeers();
+
+    ManagerStatus getStatus();
+
     void run();
 
     virtual ~ConnectionManager();

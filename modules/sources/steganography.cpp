@@ -96,8 +96,46 @@ bool Steganography::incrementViews(std::string image, std::string userId, std::s
     if (extractImage(image, "secretImage.jpg", secret)) {
 
         if (_extractData("secretImage.jpg", "views.txt", secret)) {
-            File file;
-            file.open("views.txt", FileMode::ReadWrite);
+
+            std::ifstream viewsFile("views.txt");
+            
+            if (viewsFile.is_open()) {
+
+                std::string user;
+                int views;
+                std::streampos pos;
+                //TO-DO: KEFAYA EL RAQAM.
+                while (viewsFile >> user) {
+
+                    if (user == userId) {
+
+                        pos = viewsFile.tellg();
+                        viewsFile >> views;
+                        break;
+
+                    }
+                }
+
+                views++;
+
+                viewsFile.close();
+
+                std::ofstream updatedViewsFile("views.txt");
+
+                if (updatedViewsFile.is_open()) {
+
+                    updatedViewsFile.seekp(pos);
+                    updatedViewsFile.write(" " + std::to_string(views), (std::to_string(views) + "\n").length());
+                    updatedViewsFile.close();
+
+                }
+
+            } else {
+
+                std::cerr << "Cannot edit views!" << std::endl;
+
+            }
+
         }
 
     } else {

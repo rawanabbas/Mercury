@@ -15,15 +15,20 @@ const std::string Message::TimestampToken = "Timestamp:";
 const std::string Message::ReplyTypeToken = "Reply-Type:";
 const std::string Message::RPCToken = "RPC:";
 const std::string Message::OwnerIdToken = "Owner-Id:";
+const std::string Message::UsernameToken = "Username:";
+const std::string Message::FileModeToken = "File-Mode:";
+const std::string Message::FileDescriptorToken = "File-Descriptor:";
+const std::string Message::FileNameToken = "File-Name:";
+const std::string Message::DecodedLengthToken = "Decoded-Length:";
 
 Message::Message() {
 
     _timestamp =  std::time(nullptr);
-    addHeader("TimeStamp: ", std::to_string(_timestamp));
+    addHeader(TimestampToken, std::to_string(_timestamp));
 
 }
 
-Message::Message(std::string ownerId, std::string msg, MessageType type, RPC rpcId, ReplyType replyType) {
+Message::Message(std::string ownerId, std::string username, std::string msg, MessageType type, RPC rpcId, ReplyType replyType) {
 
     setMessage(msg);
     setMessageType(type);
@@ -31,13 +36,55 @@ Message::Message(std::string ownerId, std::string msg, MessageType type, RPC rpc
     setReplyType(replyType);
     setOwnerId(ownerId);
 
+    _username = username;
     _timestamp =  std::time(nullptr);
 
-    addHeader("TimeStamp: ", std::to_string(_timestamp));
+    addHeader(UsernameToken, _username);
+    addHeader(TimestampToken, std::to_string(_timestamp));
 
 }
 
-Message::Message(std::string ownerId, std::string msg, MessageType type, RPC rpcId, ReplyType replyType, time_t timestamp) {
+Message::Message(std::string msg, HeadersMap headers) {
+
+    setMessage(msg);
+    _headers = headers;
+
+    HeadersMap::iterator it;
+
+    for (it = headers.begin(); it != headers.end(); ++it) {
+
+        if (it->first == MessageTypeToken) {
+
+            setMessageType((MessageType)std::stoi(it->second));
+
+        } else if (it -> first == RPCToken) {
+
+            setRpcId((RPC) std::stoi(it->second));
+
+        } else if (it -> first == ReplyTypeToken) {
+
+            setReplyType((ReplyType) std::stoi(it->second));
+
+        } else if (it -> first == OwnerIdToken) {
+
+            setOwnerId(it->second);
+
+        } else if (it -> first == TimestampToken) {
+
+            _timestamp = std::stol(it->second);
+
+        } else if (it -> first == UsernameToken) {
+
+            _username = it -> second;
+
+        }
+
+    }
+
+
+}
+
+Message::Message(std::string ownerId, std::string username, std::string msg, MessageType type, RPC rpcId, ReplyType replyType, time_t timestamp) {
 
     setMessage(msg);
     setMessageType(type);
@@ -45,9 +92,11 @@ Message::Message(std::string ownerId, std::string msg, MessageType type, RPC rpc
     setReplyType(replyType);
     setOwnerId(ownerId);
 
+    _username = username;
     _timestamp =  timestamp;
 
-    addHeader("TimeStamp: ", std::to_string(_timestamp));
+    addHeader(UsernameToken, _username);
+    addHeader(TimestampToken, std::to_string(_timestamp));
 }
 
 
@@ -59,7 +108,7 @@ void Message::setMessage(std::string msg) {
 
     _msg = msg;
     _size = msg.length();
-    addHeader("Size: ", std::to_string(_size));
+    addHeader(SizeToken, std::to_string(_size));
 
 }
 
@@ -69,7 +118,7 @@ MessageType Message::getMessageType() {
 
 void Message::setMessageType(MessageType type) {
     _type = type;
-    addHeader("Message-Type: ", std::to_string((int)_type));
+    addHeader(MessageTypeToken, std::to_string((int)_type));
 }
 
 size_t Message::getMessageSize() {
@@ -79,8 +128,9 @@ size_t Message::getMessageSize() {
 std::string Message::serialize() {
 
     std::string serialized = "";
+
     Decoder::encode(_msg, &serialized);
-    addHeader("Message: ", serialized);
+    addHeader(MessageToken, serialized);
 
     serialized = _serializeHeaders();
 
@@ -94,9 +144,55 @@ std::string Message::getOwnerId() const {
 
 void Message::setOwnerId(const std::string &ownerId) {
     _ownerId = ownerId;
-    addHeader("Owner-Id: ", _ownerId);
+    addHeader(OwnerIdToken, _ownerId);
 }
-void Message::_parseMessage(std::string serialized, std::string &ownerId, ReplyType &reply, RPC &rpc, MessageType &type, int &size, time_t &timestamp, std::string &encodedMsg) {
+
+//void Message::_parseMessage(std::string serialized, std::string &ownerId, ReplyType &reply, RPC &rpc, MessageType &type, int &size, time_t &timestamp, std::string &encodedMsg) {
+//    std::stringstream ss(serialized);
+//    std::string token;
+
+//    while (ss >> token) {
+
+//        if (token == SizeToken) {
+
+//            ss >> size;
+
+//        } else if (token == MessageToken) {
+
+//            ss >> encodedMsg;
+
+//        } else if (token == MessageTypeToken) {
+
+//            int msgType;
+//            ss >> msgType;
+//            type = (MessageType) msgType;
+
+//        } else if (token == TimestampToken) {
+
+//            ss >> timestamp;
+
+//        } else if (token == RPCToken) {
+
+//            int rpcId;
+//            ss >> rpcId;
+//            rpc = (RPC) rpcId;
+
+//        } else if (token == ReplyTypeToken) {
+
+//            int replyType;
+//            ss >> replyType;
+//            reply = (ReplyType)replyType;
+
+//        } else if (token == OwnerIdToken) {
+
+//            ss >> ownerId;
+
+//        }
+//    }
+//}
+
+void Message::_parseMessage(std::string serialized, std::string &encodedMsg, HeadersMap &headers) {
+
     std::stringstream ss(serialized);
     std::string token;
 
@@ -104,7 +200,7 @@ void Message::_parseMessage(std::string serialized, std::string &ownerId, ReplyT
 
         if (token == SizeToken) {
 
-            ss >> size;
+            ss >> headers[SizeToken];
 
         } else if (token == MessageToken) {
 
@@ -112,29 +208,47 @@ void Message::_parseMessage(std::string serialized, std::string &ownerId, ReplyT
 
         } else if (token == MessageTypeToken) {
 
-            int msgType;
-            ss >> msgType;
-            type = (MessageType) msgType;
+            ss >> headers[MessageTypeToken];
 
         } else if (token == TimestampToken) {
 
-            ss >> timestamp;
+            ss >> headers[TimestampToken];
 
         } else if (token == RPCToken) {
 
-            int rpcId;
-            ss >> rpcId;
-            rpc = (RPC) rpcId;
+            ss >> headers[RPCToken];
 
         } else if (token == ReplyTypeToken) {
 
-            int replyType;
-            ss >> replyType;
-            reply = (ReplyType)replyType;
+            ss >> headers[ReplyTypeToken];
 
         } else if (token == OwnerIdToken) {
 
-            ss >> ownerId;
+            ss >> headers[OwnerIdToken];
+
+        } else  if (token == FileModeToken) {
+
+            ss >> headers[FileModeToken];
+
+        } else if (token == FileDescriptorToken) {
+
+            ss >> headers[FileDescriptorToken];
+
+        } else if (token == FileNameToken) {
+
+            ss >> headers[FileNameToken];
+
+        } else if (token == DecodedLengthToken) {
+
+            ss >> headers[DecodedLengthToken];
+
+        } else if (token == UsernameToken) {
+
+            ss >> headers[UsernameToken];
+
+        } else {
+
+            ss >> headers[token];
 
         }
     }
@@ -146,8 +260,9 @@ std::string Message::_serializeHeaders() {
 
     std::map<std::string, std::string>::iterator it;
 
+
     for (it = _headers.begin(); it != _headers.end(); it++) {
-        serialized += it -> first + it -> second + " ";
+        serialized += it -> first + " " + it -> second + " ";
     }
 
     return serialized;
@@ -155,22 +270,16 @@ std::string Message::_serializeHeaders() {
 
 Message Message::deserialize(std::string serialized) {
 
-    ReplyType reply;
-    RPC rpc;
-    MessageType type;
-    int size;
-    time_t timestamp;
-    std::string ownerId;
-
     std::string encodedMsg;
     std::string unserialized("");
 
-//    std::cout <<"Serialize in desrialize: " << serialized << std::endl;
 
-    _parseMessage(serialized, ownerId, reply, rpc, type, size, timestamp, encodedMsg);
+    HeadersMap headers;
+
+    _parseMessage(serialized, encodedMsg, headers);
 
     Decoder::decode(encodedMsg, &unserialized);
-    return Message(ownerId, unserialized, type, rpc, reply, timestamp);
+    return Message(unserialized, headers);
 }
 
 RPC Message::getRpcId() const {
@@ -179,7 +288,7 @@ RPC Message::getRpcId() const {
 
 void Message::setRpcId(const RPC &rpcId) {
     _rpcId = rpcId;
-    addHeader("RPC: ", std::to_string((int)_rpcId));
+    addHeader(RPCToken, std::to_string((int)_rpcId));
 }
 
 
@@ -189,7 +298,7 @@ ReplyType Message::getReplyType() const {
 
 void Message::setReplyType(const ReplyType &replyType) {
     _replyType = replyType;
-    addHeader("Reply-Type: ", std::to_string((int)_replyType));
+    addHeader(ReplyTypeToken, std::to_string((int)_replyType));
 }
 
 void Message::addHeader(std::string key, std::string value) {

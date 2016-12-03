@@ -18,6 +18,8 @@ class Server : public Thread {
 private:
     UDPSocket _sock;
     std::string _ownerId;
+    std::string _username;
+
     char _buffer[MAX_RECV];
 
     std::vector<UDPSocket*> _clients;
@@ -28,7 +30,7 @@ private:
     void _spawnJob(UDPSocket clientSocket);
 
 public:
-    Server (std::string ownerId, int port = 0);
+    Server (std::string ownerId, std::string username, int port = 0);
     virtual ~Server ();
     void listen();
     void accept(UDPSocket& client);

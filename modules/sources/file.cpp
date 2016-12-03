@@ -1,11 +1,6 @@
 #include "file.hpp"
 
 int File::_id = 0;
-const std::string File::FileDescriptorToken = "File-Descriptor:";
-const std::string File::FileNameToken = "File-Name:";
-const std::string File::FileModeToken = "File-Mode:";
-const std::string File::DecodedLengthToken = "Decoded-Length:";
-const std::string File::WriteDataToken = "Write-Data:";
 
 std::string File::getName() const {
     return _name;
@@ -47,25 +42,21 @@ void File::parseDetails(std::string details, std::string data) {
 
     while (ss >> token) {
 
-        if (token == FileModeToken) {
+        if (token == Message::FileModeToken) {
 
             int mode;
             ss >> mode;
             _mode = (FileMode) mode;
 
-        } else if (token == FileNameToken) {
+        } else if (token == Message::FileNameToken) {
 
             ss >> _name;
 
-        } else if (token == DecodedLengthToken) {
+        } else if (token == Message::DecodedLengthToken) {
 
             ss >> _decodedLength;
 
-        } else if (token == WriteDataToken) {
-
-            ss >> data;
-
-        } else if (token == FileDescriptorToken) {
+        } else if (token == Message::FileDescriptorToken) {
 
             ss >> _fd;
 
@@ -77,7 +68,7 @@ void File::parse(std::string details, FileDescriptor &fd) {
     std::stringstream ss(details);
     std::string token;
     while (ss >> token) {
-        if (token == FileDescriptorToken) {
+        if (token == Message::FileDescriptorToken) {
             ss >> fd;
         }
     }
@@ -87,9 +78,9 @@ void File::parse(std::string details, FileDescriptor &fd, std::string &name) {
     std::stringstream ss(details);
     std::string token;
     while (ss >> token) {
-        if (token == FileDescriptorToken) {
+        if (token == Message::FileDescriptorToken) {
             ss >> fd;
-        } else if (token == FileNameToken) {
+        } else if (token == Message::FileNameToken) {
             ss >> name;
         }
     }
@@ -99,11 +90,11 @@ void File::parse(std::string details, FileDescriptor &fd, std::string &name, Fil
     std::stringstream ss(details);
     std::string token;
     while (ss >> token) {
-        if (token == FileDescriptorToken) {
+        if (token == Message::FileDescriptorToken) {
             ss >> fd;
-        } else if (token == FileNameToken) {
+        } else if (token == Message::FileNameToken) {
             ss >> name;
-        } else if (token == FileModeToken) {
+        } else if (token == Message::FileModeToken) {
             int m;
             ss >> m;
             mode = (FileMode) m;
@@ -117,24 +108,24 @@ void File::parse(std::string details, FileDescriptor &fd, std::string &name, Fil
     int decodedLength;
     std::cout << "=========================================================" << std::endl;
     while (ss >> token) {
-        if (token == FileDescriptorToken) {
+        if (token == Message::FileDescriptorToken) {
             ss >> fd;
-        } else if (token == FileNameToken) {
+        } else if (token == Message::FileNameToken) {
             ss >> name;
-        } else if (token == FileModeToken) {
+        } else if (token == Message::FileModeToken) {
             int m;
             ss >> m;
             mode = (FileMode) m;
-        } else if (token == DecodedLengthToken) {
+        } else if (token == Message::DecodedLengthToken) {
             ss >> decodedLength;
-        } else if (token == WriteDataToken) {
+        } /*else if (token == WriteDataToken) {
             while(ss.peek() == ' ')
                 ss.get();
             bytes.resize(decodedLength);
             ss.read(&(bytes[0]), decodedLength);
             std::cout << "Bytes Read: " << decodedLength << " " << bytes << std::endl;
             std::cout << bytes.size() << std::endl;
-        }
+        }*/
     }
 }
 
@@ -144,15 +135,15 @@ void File::parseDetails(std::string details) {
     std::string token;
     while (ss >> token) {
         std::cout << "Token: " << token << std::endl;
-        if (token == FileModeToken) {
+        if (token == Message::FileModeToken) {
             int mode;
             ss >> mode;
             _mode = (FileMode) mode;
-        } else if (token == FileNameToken) {
+        } else if (token == Message::FileNameToken) {
             ss >> _name;
-        } else if (token == DecodedLengthToken) {
+        } else if (token == Message::DecodedLengthToken) {
             ss >> _decodedLength;
-        } else if (token == FileDescriptorToken) {
+        } else if (token == Message::FileDescriptorToken) {
             ss >> _fd;
         }
     }
@@ -166,33 +157,58 @@ int File::getDecodedLength() const {
 void File::setDecodedLength(int decodedLength) {
     _decodedLength = decodedLength;
 }
-File::File(bool local, std::string dir):_isLocal(local), _dir(dir), _isEOF(false) {
+File::File(bool local, std::string dir):_isLocal(local), _isEOF(false) {
     _id++;
 }
 
+
+std::string File::getDirectory() const {
+    return _dir;
+}
+
+void File::setDirectory(const std::string &dir) {
+    _dir = dir;
+}
+
+File::File () {
+    _id++;
+    _isLocal = true;
+}
+
 FileStatus File::create(std::string name, FileMode mode) {
+
     _mode = mode;
-    std::string path = _dir + name;
-    int fd = ::open(path.c_str(), O_RDWR|O_CREAT|O_TRUNC, _mode);
+
+    std::string path = _dir + '/' + name;
+
+    std::cout << path << std::endl;
+
+    int fd = ::open(path.c_str(), O_RDWR|O_CREAT|O_TRUNC, S_IRWXU | S_IRWXG | S_IRWXO);
+
     if (fd < 0) {
+
+        perror("Cannot open output file\n");
         _status = FileStatus::CreateOperationFailed;
         return _status;
+
     } else {
+
         _fd = fd;
         _status = FileStatus::CreateOperationSuccess;
         return _status;
+
     }
 }
 
-FileStatus File::rcreate(std::string ownerId, std::string name, FileMode mode, UDPSocket server) {
+FileStatus File::rcreate(std::string ownerId, std::string username, std::string name, FileMode mode, UDPSocket server) {
     _isLocal = false;
     _name = name;
 //    std::string str = "N: " + _name + " FM: " + std::to_string((int)mode);
 
 
-    Message message(ownerId, "Create!", MessageType::Request, RPC::CreateFile);
-    message.addHeader("File-Name: ", _name);
-    message.addHeader("File-Mode: ", std::to_string((int)mode));
+    Message message(ownerId, username, "Create!", MessageType::Request, RPC::CreateFile);
+    message.addHeader(Message::FileNameToken, _name);
+    message.addHeader(Message::FileModeToken, std::to_string((int)mode));
 
     if (!_sock.sendMessageTo(server, message)) {
 
@@ -215,10 +231,11 @@ FileStatus File::rcreate(std::string ownerId, std::string name, FileMode mode, U
             if (message.getMessageType() == MessageType::Reply && message.getReplyType() == ReplyType::Success) {
 //                parseDetails(message.getMessage());
 
-                setMode((FileMode)std::stoi(message.getHeader("File-Mode: ")));
-                setName(message.getHeader("File-Name: "));
-                setDecodedLength(std::stoi(message.getHeader("Decoded-Length: ")));
-                setFd(std::stoi(message.getHeader("File-Descriptor: ")));
+                setMode((FileMode)std::stoi(message.getHeader(Message::FileModeToken)));
+                setName(message.getHeader(Message::FileNameToken));
+
+//                setDecodedLength(std::stoi(message.getHeader(Message::DecodedLengthToken)));
+                setFd(std::stoi(message.getHeader(Message::FileDescriptorToken)));
 
                 _status = FileStatus::CreateOperationSuccess;
                 return _status;
@@ -237,8 +254,12 @@ FileStatus File::rcreate(std::string ownerId, std::string name, FileMode mode, U
 FileStatus File::open(std::string name, FileMode mode) {
     _isLocal = true;
     _mode = mode;
-    std::string path = _dir + name;
-    int fd = ::open(path.c_str(), O_RDWR | O_APPEND, (int)_mode);
+
+    std::string path = _dir + "/" + name;
+
+    std::cout << "path: " << path << std::endl;
+
+    int fd = ::open(path.c_str(), O_RDWR | O_APPEND, S_IRWXU | S_IRWXG | S_IRWXO);
     if (fd < 0) {
         perror("Cannot Open File.");
         _status = FileStatus::OpenOperationFailed;
@@ -250,7 +271,7 @@ FileStatus File::open(std::string name, FileMode mode) {
     }
 }
 
-FileStatus File::ropen(std::string ownerId, std::string path, FileMode mode,  UDPSocket server) {
+FileStatus File::ropen(std::string ownerId, std::string username, std::string path, FileMode mode,  UDPSocket server) {
 
     std::cout << "Remote connection to " << _sock.getPortNumber() << std::endl;
 
@@ -259,10 +280,10 @@ FileStatus File::ropen(std::string ownerId, std::string path, FileMode mode,  UD
 
 //    std::string str = _name + " FM: " + std::to_string((int)mode);
 
-    Message message(ownerId, "Open!", MessageType::Request, RPC::OpenFile);
+    Message message(ownerId, username, "Open!", MessageType::Request, RPC::OpenFile);
 
-    message.addHeader("File-Name: ", _name);
-    message.addHeader("File-Mode: ", std::to_string((int)mode));
+    message.addHeader(Message::FileNameToken, _name);
+    message.addHeader(Message::FileModeToken, std::to_string((int)mode));
 
     if (!_sock.sendMessageTo(server, message)) {
 
@@ -350,16 +371,16 @@ std::string File::read() {
     return std::string(buffer, size);
 }
 
-FileStatus File::rread(std::string ownerId, UDPSocket server) {
+FileStatus File::rread(std::string ownerId, std::string username, UDPSocket server) {
 
     std::cout << "Remote Read.." << std::endl;
 
 //    std::string str = _name + " FM: " + std::to_string((int)FileMode::ReadOnly) + " FD: " + std::to_string(_fd);
 
-    Message message(ownerId, "Read", MessageType::Request, RPC::ReadFile);
-    message.addHeader("File-Name: ", _name);
-    message.addHeader("File-Mode: ", std::to_string((int)FileMode::ReadOnly));
-    message.addHeader("File-Descriptor: ", std::to_string(_fd));
+    Message message(ownerId, username, "Read", MessageType::Request, RPC::ReadFile);
+    message.addHeader(Message::FileNameToken, _name);
+    message.addHeader(Message::FileModeToken, std::to_string((int)FileMode::ReadOnly));
+    message.addHeader(Message::FileDescriptorToken, std::to_string(_fd));
 
     if (!_sock.sendMessageTo(server, message)) {
 
@@ -483,25 +504,25 @@ FileStatus File::write(std::string name, std::string str, unsigned int length) {
 
 }
 
-FileStatus File::rwrite(std::string ownerId, std::string name, std::string txt, UDPSocket server) {
+FileStatus File::rwrite(std::string ownerId, std::string username, std::string name, std::string txt, UDPSocket server) {
 
     _name = name;
-    return rwrite(ownerId, txt, server);
+    return rwrite(ownerId, username, txt, server);
 
 }
 
-FileStatus File::rwrite(std::string ownerId, std::string data, UDPSocket server) {
+FileStatus File::rwrite(std::string ownerId, std::string username, std::string data, UDPSocket server) {
 //    std::string str = "N: " + _name + " FM: " + std::to_string((int)FileMode::ReadOnly) + " L: " +
 //                      std::to_string(txt.length()) + " W: " + txt + " FD: " + std::to_string(_fd);
 //    std::cout << "rWrite: " << _fd << std::endl;
 
-    Message message(ownerId, data, MessageType::Request, RPC::WriteToFile);
+    Message message(ownerId, username, data, MessageType::Request, RPC::WriteToFile);
 
-    message.addHeader("File-Name: ", _name);
-    message.addHeader("File-Mode: ", std::to_string((int) FileMode::ReadOnly));
-    message.addHeader("Decoded-Length: ", std::to_string(data.length()));
-    message.addHeader("File-Descriptor: ", std::to_string(_fd));
-//    message.addHeader("Owner-Id: ", ownerId);
+    message.addHeader(Message::FileNameToken, _name);
+    message.addHeader(Message::FileModeToken, std::to_string((int) FileMode::ReadOnly));
+    message.addHeader(Message::DecodedLengthToken, std::to_string(data.length()));
+    message.addHeader(Message::FileDescriptorToken, std::to_string(_fd));
+//    message.addHeader(Message::OwnerIdToken, ownerId);
 
     if (!_sock.sendMessageTo(server, message)) {
 

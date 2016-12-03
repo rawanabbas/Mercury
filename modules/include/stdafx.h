@@ -25,9 +25,11 @@
 #include <netdb.h>
 #include <map>
 #include <sys/socket.h>
-#include <arpa/inet.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/select.h>
 #include <sys/file.h>
+#include <arpa/inet.h>
 
 #include <cryptopp/sha.h>
 #include <cryptopp/cryptlib.h>
@@ -43,3 +45,7 @@
 #define ERROR 400
 #define MAX_READ 600
 #define MAX_RETRY 3
+
+typedef void (*Callback)(void*);
+typedef std::map<std::string, std::string>  HeadersMap;
+

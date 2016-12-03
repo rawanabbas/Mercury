@@ -37,7 +37,7 @@ protected:
 
 public:
 
-    Heartbeat(std::string ownerId, std::string host, int port);
+    Heartbeat(std::string ownerId, std::string username, std::string host, int port);
 
     Status getStatus();
 

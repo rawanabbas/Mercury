@@ -166,11 +166,13 @@ void PeerServer::run() {
             } else if (msg.getMessageType() == MessageType::EstablishConnection) {
 
                 User *user = new User;
-                user->setUserID(msg.getHeader("Owner-Id: "));
+                user->setUserID(msg.getHeader(Message::OwnerIdToken));
 
                 _spawnTracker(clientSocket, user);
 
             }
+        } else  {
+            std::cout << "Failed To Recieve!" << '\n';
         }
 
     }

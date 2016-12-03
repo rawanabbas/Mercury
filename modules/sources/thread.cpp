@@ -28,11 +28,17 @@ void Thread::setMutex(pthread_mutex_t mutex) {
 }
 
 void * Thread::_run(void *thisThread) {
+
     Thread* threadPtr = (Thread*) thisThread;
+
     threadPtr->run();
+
     if (threadPtr->_doneCallback != NULL) {
+
         (*(threadPtr->_doneCallback))(threadPtr, threadPtr -> _parent);
+
     }
+
     pthread_exit(0);
 }
 
@@ -65,17 +71,19 @@ int Thread::release() {
     return pthread_mutex_unlock(&_mutex);
 }
 
-//void Thread::lock(pthread_mutex_t mutex) {
-//    pthread_mutex_lock(&mutex);
-//}
+void Thread::lock(pthread_mutex_t mutex) {
+    pthread_mutex_lock(&mutex);
+}
 
-//void Thread::release(pthread_mutex_t mutex) {
-//    pthread_mutex_unlock(&mutex);
-//}
+void Thread::release(pthread_mutex_t mutex) {
+    pthread_mutex_unlock(&mutex);
+}
 
 void Thread::setDoneCallback(ThreadCallback callback, void *parent) {
+
     _doneCallback = callback;
     _parent = parent;
+
 }
 
 void Thread::setParent(void *parent) {

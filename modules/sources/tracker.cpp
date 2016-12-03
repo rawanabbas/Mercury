@@ -108,10 +108,8 @@ void Tracker::_pulse() {
 
                 release();
 
-                std::cout << "Peer-List: " << peerList << std::endl;
-
                 _msg.setMessageType(MessageType::Result);
-                _msg.addHeader("Owner-Id: ", "Tracker-" + std::to_string(getThreadId()));
+                _msg.addHeader(Message::OwnerIdToken, "Tracker-" + std::to_string(getThreadId()));
                 _msg.setMessage(peerList);
 
                 if (!_serverSocket.sendMessageTo(_clientSocket, _msg)) {

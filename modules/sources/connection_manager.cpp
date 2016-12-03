@@ -2,15 +2,15 @@
 
 
 
-ConnectionManager::ConnectionManager(std::string ownerId, std::string host, int port) : Heartbeat(ownerId, host, port) {
+ConnectionManager::ConnectionManager(std::string ownerId, std::string username, std::string host, int port) : Heartbeat(ownerId, username, host, port) {
 
     _queryMessage.setMessageType(MessageType::Query);
     _queryMessage.setMessage("Query");
-    _queryMessage.addHeader("Owner-Id", ownerId);
+    _queryMessage.addHeader(Message::OwnerIdToken, ownerId);
 
     pthread_mutex_init(&_peerMutex, NULL);
     setMutex(_peerMutex);
-
+    _mStatus = ManagerStatus::FetchingPeers;
 }
 
 Peer ConnectionManager::getPeer(std::string userID) {
@@ -19,38 +19,61 @@ Peer ConnectionManager::getPeer(std::string userID) {
 
 }
 
+PeerMap ConnectionManager::getPeers() {
+
+    while(_mStatus !=  ManagerStatus::FetcheedPeers);
+
+    return _peers;
+
+}
+
+ManagerStatus ConnectionManager::getStatus() {
+
+    return _mStatus;
+
+}
+
 void ConnectionManager::run() {
 
-    while(true) {
+    if (!_establishConnection()) {
 
-        if (!_establishConnection()) {
-            std::cerr << "Cannot connect to the peering server!" << std::endl;
-        }
+        std::cerr << "Cannot connect to the peering server!" << std::endl;
 
-        if (!_sendMessage(_queryMessage)) {
+    } else {
 
-            perror("Cannot Send Query!");
-            continue;
+        while(true) {
 
-        } else {
 
-            std::string info;
-            if (_receiveWithTimeout(info, 5) == -1) {
+            if (!_sendMessage(_queryMessage)) {
 
-                perror("TimedOut!");
+                perror("Cannot Send Query!");
                 continue;
 
             } else {
 
-                Message result = Message::deserialize(info);
+                std::string info;
+                if (_receiveWithTimeout(info, 5) == -1) {
 
-                if (result.getMessageType() == MessageType::Result) {
-
-                    _parsePeerList(result.getMessage());
+                    perror("TimedOut!");
+                    continue;
 
                 } else {
 
-                    std::cerr << "Undefined response." << std::endl;
+                    Message result = Message::deserialize(info);
+
+                    if (result.getMessageType() == MessageType::Result) {
+
+                        _parsePeerList(result.getMessage());
+
+                        _mStatus = ManagerStatus::FetcheedPeers;
+
+                    } else {
+
+                        std::cerr << "Undefined response." << std::endl;
+                        _mStatus = ManagerStatus::Error;
+
+
+                    }
 
 
                 }
@@ -59,13 +82,12 @@ void ConnectionManager::run() {
             }
 
 
+            _resetTrials();
+            _wait(20);
+
         }
-
-
-        _resetTrials();
-        _wait(20);
-
     }
+
 
 }
 
@@ -74,7 +96,7 @@ void ConnectionManager::_parsePeerList(std::string peerList) {
     std::stringstream ss(peerList);
     std::string peerStr;
 
-    std::cout << peerList << std::endl;
+//    std::cout << peerList << std::endl;
 
     while (ss >> peerStr) {
 
@@ -85,15 +107,24 @@ void ConnectionManager::_parsePeerList(std::string peerList) {
         std::getline(ssPeer, username, ',');
         std::getline(ssPeer, ip);
 
-        Peer *peer = new Peer(userID, ip, username);
+        if (userID != _ownerId) {
 
-        lock();
-        _peers[userID] = peer;
-        release();
+            Peer *peer = new Peer(userID, username, ip);
+
+            lock();
+            _peers[userID] = peer;
+            release();
+
+        } else {
+
+            _peers.erase(userID);
+
+        }
+
 
     }
 }
 
 ConnectionManager::~ConnectionManager() {
-    
+
 }

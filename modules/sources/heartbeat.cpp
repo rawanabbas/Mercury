@@ -21,7 +21,7 @@ void Heartbeat::_resetTrials() {
 
 }
 
-Heartbeat::Heartbeat(std::string ownerId, std::string host, int port) : Client(ownerId, host, port) {
+Heartbeat::Heartbeat(std::string ownerId, std::string username, std::string host, int port) : Client(ownerId, username, host, port) {
 
     pthread_condattr_init(&_timerAttr);
     pthread_condattr_setclock(&_timerAttr, CLOCK_MONOTONIC);
@@ -35,7 +35,8 @@ Heartbeat::Heartbeat(std::string ownerId, std::string host, int port) : Client(o
 
 bool Heartbeat::_establishConnection() {
 
-    Message eMessage(getOwnerId(), "Establish!", MessageType::EstablishConnection);
+
+    Message eMessage(getOwnerId(), getUsername(), "Establish!", MessageType::EstablishConnection);
 
     while(_retry > 0) {
 
@@ -92,7 +93,7 @@ void Heartbeat::run() {
 
         while(_retry > 0) {
 
-            Message pingMessage(getOwnerId(), "Ping", MessageType::Ping);
+            Message pingMessage(getOwnerId(), getUsername(), "Ping", MessageType::Ping);
 
             if (!_sendMessage(pingMessage)) {
 
@@ -134,6 +135,6 @@ void Heartbeat::run() {
 
 Heartbeat::~Heartbeat() {
 
-    std::cout << "~Heartbeat" << std::endl;
+//    std::cout << "~Heartbeat" << std::endl;
 
 }

@@ -26,6 +26,7 @@ private:
     void *_parent;
     static int _id;
     std::string _ownerId;
+    std::string _username;
 
     UDPSocket _clientSocket;
     UDPSocket _serverSocket;
@@ -46,7 +47,7 @@ private:
 
 public:
 
-    Job (std::string ownerId, UDPSocket sock);
+    Job (std::string ownerId, std::string username, UDPSocket sock);
     int getJobId() const;
     virtual ~Job ();
     void run();

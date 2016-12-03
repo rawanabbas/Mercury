@@ -46,6 +46,28 @@ enum class ReplyType {
 
 class Message {
 private:
+
+
+    //Private Variables
+    MessageType _type;
+    ReplyType _replyType;
+    size_t _size;
+    RPC _rpcId;
+
+    std::string _msg;
+    std::time_t _timestamp;
+    std::string _ownerId;
+    std::string _username;
+
+    HeadersMap _headers;
+
+    //Private Functions
+    static void _parseMessage(std::string serialized, std::string &encodedMsg, HeadersMap &headers);
+
+    std::string _serializeHeaders();
+
+public:
+
     //Tokens:
     static const std::string SizeToken;
     static const std::string MessageTypeToken;
@@ -54,30 +76,16 @@ private:
     static const std::string ReplyTypeToken;
     static const std::string RPCToken;
     static const std::string OwnerIdToken;
-
-    //Private Variables
-    MessageType _type;
-    std::string _msg;
-    std::time_t _timestamp;
-    RPC _rpcId;
-    ReplyType _replyType;
-    size_t _size;
-    std::string _ownerId;
-
-    std::map<std::string, std::string> _headers;
-
-    //Private Functions
-    static void _parseMessage(std::string serialized, std::string &ownerId, ReplyType &reply,
-                              RPC &rpc, MessageType &type, int &size, time_t &timestamp,
-                              std::string &encodedMsg);
-
-    std::string _serializeHeaders();
-
-public:
+    static const std::string UsernameToken;
+    static const std::string FileModeToken;
+    static const std::string FileDescriptorToken;
+    static const std::string FileNameToken;
+    static const std::string DecodedLengthToken;
 
     Message ();
-    Message (std::string ownerId, std::string msg, MessageType type, RPC rpcId, ReplyType replyType, time_t timestamp);
-    Message (std::string ownerId, std::string msg, MessageType type = MessageType::Undefined, RPC rpcId = RPC::Undefined, ReplyType replyType = ReplyType::NoReply);
+    Message (std::string msg, HeadersMap headers);
+    Message (std::string ownerId, std::string username, std::string msg, MessageType type, RPC rpcId, ReplyType replyType, time_t timestamp);
+    Message (std::string ownerId, std::string username, std::string msg, MessageType type = MessageType::Undefined, RPC rpcId = RPC::Undefined, ReplyType replyType = ReplyType::NoReply);
 
     std::string getMessage();
     void setMessage(std::string);

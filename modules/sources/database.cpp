@@ -42,7 +42,6 @@ bool Database::_create() {
 User Database::_fetch(std::string username) {
 
     char *error;
-    std::cout << "Username: " << username << std::endl;
     std::string sql = "SELECT * FROM USERS WHERE username = '" + username + "';";
 
     User user;
@@ -53,7 +52,7 @@ User Database::_fetch(std::string username) {
         throw "Selecting User Failed!";
 
     } else {
-        std::cout << "User Details: " << user.getUsername() << " User Password: " << user.getPassword() << std::endl;
+
         return user;
 
     }
@@ -101,14 +100,12 @@ int Database::_fetchCallback(void *userPtr, int argc, char **argv, char **column
     User* user = (User*) userPtr;
 
     for (int i = 0; i < argc; ++i) {
-        std::cout << column[i] << std::endl;
         if (std::string(column[i]) == UsernameColumnToken) {
 
             user->setUsername(argv[i]);
             continue;
 
         } else if (std::string(column[i]) == UserIDColumnToken) {
-            std::cout << "--UserID--" << std::endl;
             user->setUserID(argv[i]);
             continue;
 

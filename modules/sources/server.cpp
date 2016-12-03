@@ -7,7 +7,7 @@
  */
 #include "server.hpp"
 
-Server::Server(std::string ownerId, int port) : Thread(), _ownerId(ownerId) {
+Server::Server(std::string ownerId, std::string username, int port) : Thread(), _ownerId(ownerId), _username(username) {
 
     std::cout << "Port Number: " << port << std::endl;
 
@@ -26,7 +26,7 @@ Server::~Server() {
 
 void Server::_spawnJob(UDPSocket clientSocket) {
 
-    Job *job = new Job(_ownerId, clientSocket);
+    Job *job = new Job(_ownerId, _username, clientSocket);
 
     job -> setParent((void *)this);
     job -> setDoneCallback(_callbackWrapper, (void *)this);
@@ -88,12 +88,16 @@ int Server::getServerPort() {
 
 void Server::_terminateJob(Job *job) {
     std::cout << "Terminating the Job!" << std::endl;
+
     _isRunning = false;
+
     std::vector<Job*>::iterator it = std::find(_jobs.begin(), _jobs.end(), job);
+
     if (it != _jobs.end()) {
 
         (*it) -> join();
         _jobs.erase(it);
+
     }
 }
 

@@ -32,6 +32,14 @@ void User::setPasswordWHash(std::string password) {
     _password = password;
 }
 
+void User::signup(std::string username, std::string password) {
+
+    setUsername(username);
+    setPassword(password);
+    _generateID();
+
+}
+
 
 void User::setLastLogin(time_t lastLogin) {
 

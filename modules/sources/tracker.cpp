@@ -2,7 +2,12 @@
 
 int Tracker::_id = 0;
 
-Tracker::Tracker(UDPSocket clientSocket, User *user, std::map<std::string, Peer *> *peers) : Thread(), _clientSocket(clientSocket), _user(user), _peers(peers) {
+Tracker::Tracker(UDPSocket clientSocket, User *user, std::map<std::string, Peer *> *peers, std::vector<Peer> *allPeers)
+: Thread(), _clientSocket(clientSocket), _user(user), _peers(peers), _allPeers(allPeers) {
+
+    std::cout << "============================================================" << std::endl;
+    std::cout << "All Peers Tracker: " << _allPeers->size() << std::endl;
+    std::cout << "============================================================" << std::endl;
 
 }
 
@@ -54,7 +59,7 @@ bool Tracker::operator == (const Tracker &tracker) {
 
 bool Tracker::_sendInfo() {
 
-    if (!_serverSocket.sendMessageTo(_clientSocket, Message(_user->getUserID(), std::to_string(_serverSocket.getPortNumber()), MessageType::Info))) {
+    if (!_serverSocket.sendMessageTo(_clientSocket, Message(_user->getUserID(), _user->getUsername(), std::to_string(_serverSocket.getPortNumber()), MessageType::Info))) {
 
         perror("Cannot Send the New Socket!");
         return false;
@@ -93,7 +98,6 @@ void Tracker::_pulse() {
                 break;
 
             } else if (_msg.getMessageType() == MessageType::Query) {
-                //TODO
                 lock();
 
                 std::string peerList = "";
@@ -118,6 +122,27 @@ void Tracker::_pulse() {
 
                 }
 
+            } else if (_msg.getMessageType() == MessageType::QueryAll) {
+
+                std::cout << "QUERY ALL" << std::endl;
+
+                std::string peers = "";
+
+                for (size_t i = 0; i < _allPeers->size(); i++) {
+
+                    peers += (*_allPeers)[i].getUserID() + "," + (*_allPeers)[i].getUsername() + ";\n";
+
+                }
+
+                _msg.setMessageType(MessageType::Result);
+                _msg.addHeader(Message::OwnerIdToken, "Tracker-" + std::to_string(getThreadId()));
+                _msg.setMessage(peers);
+
+                if (!_serverSocket.sendMessageTo(_clientSocket, _msg)) {
+
+                    perror("Cannot send peer list! Client may be offline.");
+
+                }
             }
 
         } else {

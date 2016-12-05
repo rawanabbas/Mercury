@@ -15,6 +15,7 @@ class Tracker : public Thread {
     User *_user;
 
     PeerMap *_peers;
+    std::vector<Peer> *_allPeers;
 
     UDPSocket _clientSocket;
     UDPSocket _serverSocket;
@@ -24,7 +25,7 @@ class Tracker : public Thread {
     void _pulse();
 public:
 
-    Tracker(UDPSocket clientSocket, User *user, std::map<std::string, Peer*> *peers);
+    Tracker(UDPSocket clientSocket, User *user, std::map<std::string, Peer*> *peers, std::vector<Peer> *allPeers);
 
     void run();
     std::string getUserID();

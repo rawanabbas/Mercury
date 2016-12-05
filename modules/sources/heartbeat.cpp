@@ -35,7 +35,6 @@ Heartbeat::Heartbeat(std::string ownerId, std::string username, std::string host
 
 bool Heartbeat::_establishConnection() {
 
-
     Message eMessage(getOwnerId(), getUsername(), "Establish!", MessageType::EstablishConnection);
 
     while(_retry > 0) {

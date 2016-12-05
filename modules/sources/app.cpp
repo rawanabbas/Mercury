@@ -13,7 +13,6 @@ int main(int argc, char const *argv[]) {
         exit(1);
     }
 
-    //    std::string msg;
 
     std::cout << "Let's Authenticate!" << std::endl;
 
@@ -94,71 +93,7 @@ int main(int argc, char const *argv[]) {
         }
     });
 
-
-
-    //    if(authClient.isAuthenticated() && authClient.getStatus() == ClientStatus::Authenticated) {
-
-
-    //        ownerId = authClient.getOwnerId();
-
-    //        Heartbeat heartbeat(ownerId, argv[1], std::stoi(argv[2]));
-    //        ConnectionManager manager(ownerId, argv[1], std::stoi(argv[2]));
-    //        Server server(ownerId, 3001);
-
-
-    //        server.start();
-    //        heartbeat.start();
-    //        manager.start();
-
-
-    //        while(manager.getStatus() != ManagerStatus::FetcheedPeers);
-
-
-    //        PeerMap peers = manager.getPeers();
-    //        PeerMap::iterator it = peers.begin();
-    //        int index = 0;
-
-
-    //        for (it = peers.begin(); it != peers.end(); ++it) {
-
-    //            std::cout << ++index << " : " << it -> first <<  " IP: " << it -> second -> getIP() << std::endl;
-
-    //        }
-
-
-    //        if (peers.find(peers.begin() -> first) != peers.end()) {
-
-    //            Client sClient(ownerId, peers[peers.begin() -> first] -> getIP(), 3301);
-
-    //            sClient.start();
-    //            std::cout << "A client has been created to send an image to!" << std::endl;
-    //            sClient.setCommand(std::string(1, (char)Commands::Ping));
-    //            sClient.setCommand(std::string(1, (char)Commands::File));
-    //            sClient.setCommand(std::string(1, (char)Commands::SendFile));
-
-    //            sClient.join();
-
-    //        } else {
-
-    //            std::cout << "DOESNT EXIST!!" << std::endl;
-
-    //        }
-
-
-
-
     authClient.join();
-
-    //    } else {
-
-    //        std::cout << "Not Authenticated!" << std::endl;
-    //        std::cout << "NOW EXITING!" << std::endl;
-    //        std::cout << "Bye!" << std::endl;
-
-    //    }
-
-
-
 
     return 0;
 }

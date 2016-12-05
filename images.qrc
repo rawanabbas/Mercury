@@ -1,0 +1,23 @@
+<RCC>
+    <qresource prefix="/logo">
+        <file>build/mercury.ico</file>
+        <file>build/logo-big.png</file>
+        <file>build/logo-medium.png</file>
+        <file>build/logo-1.png</file>
+    </qresource>
+    <qresource prefix="/icons">
+        <file>build/login.png</file>
+        <file>build/login-dialog.png</file>
+        <file>build/login-small-dialog.png</file>
+        <file>build/login-medium.png</file>
+        <file>build/logo.png</file>
+        <file>build/cloud-users.png</file>
+        <file>build/upload.png</file>
+        <file>build/image.png</file>
+        <file>build/image-small.png</file>
+    </qresource>
+    <qresource prefix="/status">
+        <file>build/offline-dot-small.png</file>
+        <file>build/online-dot-small.png</file>
+    </qresource>
+</RCC>

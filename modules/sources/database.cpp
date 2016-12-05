@@ -59,6 +59,26 @@ User Database::_fetch(std::string username) {
 
 }
 
+std::vector<Peer> Database::_fetch() {
+
+    char *error;
+    std::string sql = "SELECT * FROM USERS;";
+
+    std::vector<Peer> peers;
+
+    if (sqlite3_exec(_db, sql.c_str(), _fetchAllCallback, (void *)&peers, &error) != SQLITE_OK) {
+
+        std::cerr << "An error has occured while selecting the user: " << error << std::endl;
+        throw "Selecting All Users Failed!";
+
+    } else {
+
+        return peers;
+
+    }
+
+}
+
 bool Database::_insert(std::string username, std::string password, std::string userID) {
 
     char *error;
@@ -123,6 +143,33 @@ int Database::_fetchCallback(void *userPtr, int argc, char **argv, char **column
 
 }
 
+int Database::_fetchAllCallback(void *userPtr, int argc, char **argv, char **column) {
+
+    std::vector<Peer> * peers = (std::vector<Peer> *) userPtr;
+
+    Peer peer;
+
+    for (int i = 0; i < argc; ++i) {
+        if (std::string(column[i]) == UsernameColumnToken) {
+
+            peer.setUsername(argv[i]);
+            continue;
+
+        } else if (std::string(column[i]) == UserIDColumnToken) {
+            peer.setUserID(argv[i]);
+            continue;
+
+        }
+
+    }
+
+    peers->push_back(peer);
+
+    return 0;
+
+
+}
+
 bool Database::insert(User user) {
 
     std::cout << "Database Status: " << (int) getStatus() << std::endl;
@@ -156,6 +203,19 @@ User Database::fetch(std::string username) {
 
     }
 
+}
+
+std::vector<Peer> Database::fetch() {
+
+    if (getStatus() == DatabaseStatus::Ready) {
+
+        return _fetch();
+
+    } else {
+
+        throw "An error has occured while fetching the user!";
+
+    }
 }
 
 bool Database::remove(User user) {

@@ -20,11 +20,13 @@ const std::string Message::FileModeToken = "File-Mode:";
 const std::string Message::FileDescriptorToken = "File-Descriptor:";
 const std::string Message::FileNameToken = "File-Name:";
 const std::string Message::DecodedLengthToken = "Decoded-Length:";
+const std::string Message::NumberOfMessagesToken = "Number-Messages:";
 
 Message::Message() {
 
-    _timestamp =  std::time(nullptr);
-    addHeader(TimestampToken, std::to_string(_timestamp));
+    _timestamp =  std::to_string(std::time(nullptr));
+
+    addHeader(TimestampToken, _timestamp);
 
 }
 
@@ -37,10 +39,10 @@ Message::Message(std::string ownerId, std::string username, std::string msg, Mes
     setOwnerId(ownerId);
 
     _username = username;
-    _timestamp =  std::time(nullptr);
+    _timestamp =  std::to_string(std::time(nullptr));
 
     addHeader(UsernameToken, _username);
-    addHeader(TimestampToken, std::to_string(_timestamp));
+    addHeader(TimestampToken, _timestamp);
 
 }
 
@@ -71,20 +73,17 @@ Message::Message(std::string msg, HeadersMap headers) {
 
         } else if (it -> first == TimestampToken) {
 
-            _timestamp = std::stol(it->second);
+            _timestamp = it->second;
 
         } else if (it -> first == UsernameToken) {
 
             _username = it -> second;
 
         }
-
     }
-
-
 }
 
-Message::Message(std::string ownerId, std::string username, std::string msg, MessageType type, RPC rpcId, ReplyType replyType, time_t timestamp) {
+Message::Message(std::string ownerId, std::string username, std::string msg, MessageType type, RPC rpcId, ReplyType replyType, std::string timestamp) {
 
     setMessage(msg);
     setMessageType(type);
@@ -96,7 +95,7 @@ Message::Message(std::string ownerId, std::string username, std::string msg, Mes
     _timestamp =  timestamp;
 
     addHeader(UsernameToken, _username);
-    addHeader(TimestampToken, std::to_string(_timestamp));
+    addHeader(TimestampToken, _timestamp);
 }
 
 

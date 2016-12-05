@@ -13,7 +13,7 @@ BUILD_DIR = ./build
 OBJ_DIR = ./objects
 
 CC = g++
-DEBUG = g
+DEBUG = -g
 LIBS = -lpthread -lcrypto++ -lsqlite3
 CFLAGS = -std=c++11 -Wall -Wno-reorder $(LIBS)
 
@@ -24,8 +24,8 @@ SERVER_OBJS = \
 	$(OBJ_DIR)/message.o \
 	$(OBJ_DIR)/file.o \
 	$(OBJ_DIR)/server.o \
-	$(OBJ_DIR)/decoder.o
-	# $(OBJ_DIR)/server_main.o
+	$(OBJ_DIR)/decoder.o \
+	$(OBJ_DIR)/server_main.o
 
 CLIENT_OBJS = \
 	$(OBJ_DIR)/client.o \
@@ -114,7 +114,7 @@ app: pre $(APP_OBJS)
 	$(CC) $(APP_OBJS) $(INCLUDE) -o $(BUILD_DIR)/$(APP_BINARY) $(CFLAGS)
 
 peering: pre $(PEER_OBJS)
-	$(CC) $(PEER_OBJS) $(INCLUDE) -o $(BUILD_DIR)/$(PEER_BINARY) $(CFLAGS)
+	$(CC) $(DEBUG) $(PEER_OBJS) $(INCLUDE) -o $(BUILD_DIR)/$(PEER_BINARY) $(CFLAGS)
 
 clean:
 	rm -rf $(BUILD_DIR)/*.o $(BINARY_DIR)/*.o $(OBJ_DIR)/*.o

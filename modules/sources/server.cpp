@@ -17,16 +17,26 @@ Server::Server(std::string ownerId, std::string username, int port) : Thread(), 
 
     }
 
+    if (pthread_mutex_init(&_filesMutex, NULL)) {
+
+            throw "Could not initialize Mutex!";
+
+    }
+
+    setMutex(_filesMutex);
+
     _isRunning = true;
 }
 
 Server::~Server() {
 
+    pthread_mutex_destroy(&_filesMutex);
+
 }
 
 void Server::_spawnJob(UDPSocket clientSocket) {
 
-    Job *job = new Job(_ownerId, _username, clientSocket);
+    Job *job = new Job(_ownerId, _username, clientSocket, &_files, _filesMutex);
 
     job -> setParent((void *)this);
     job -> setDoneCallback(_callbackWrapper, (void *)this);

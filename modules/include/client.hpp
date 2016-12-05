@@ -26,7 +26,8 @@ enum class Commands : char {
     Register = 'g',
     SignIn = 'a',
     Ping = 'p',
-    EstablishConnection = 'e'
+    EstablishConnection = 'e',
+    Query = 'u'
 };
 
 enum class ClientStatus {
@@ -56,6 +57,8 @@ private:
     bool _isAuthenticated;
 
     pthread_mutex_t _commandMutex;
+
+    std::vector<std::string> _pendingFiles;
 
     void _execute();
 
@@ -106,9 +109,11 @@ protected:
     int _unlock();
 
     void _clearCommand();
+    void _resetArguments();
 
 public:
 
+    Client ();
     Client (std::string ownerId, std::string username, std::string hostname, int serverPort);
     Client (std::string hostname, int serverPort);
 
@@ -117,6 +122,7 @@ public:
     std::vector<std::string> getArguments() const;
     void setArguments(const std::vector<std::string> &args);
     void addArgument(std::string arg);
+
 
     bool isAuthenticated();
 

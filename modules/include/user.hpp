@@ -25,6 +25,8 @@ public:
     void setPassword(std::string password);
     void setPasswordWHash(std::string password);
 
+    void signup(std::string username, std::string password);
+
     void setLastLogin(time_t lastLogin);
     bool isAuthenticated(User user);
 

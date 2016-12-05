@@ -18,6 +18,7 @@ class PeerServer : public Thread {
     Database _db;
     UDPSocket _sock;
     PeerMap _peers;
+    std::vector<Peer> _allPeers;
     std::vector<Tracker*> _trackers;
 
     pthread_mutex_t _peersMutex;

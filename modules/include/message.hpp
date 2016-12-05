@@ -25,7 +25,9 @@ enum class MessageType {
     Unauthorized,
     Register,
     Query,
+    QueryAll,
     Result,
+    EndFile,
     Undefined = -1
 };
 
@@ -55,7 +57,7 @@ private:
     RPC _rpcId;
 
     std::string _msg;
-    std::time_t _timestamp;
+    std::string _timestamp;
     std::string _ownerId;
     std::string _username;
 
@@ -81,10 +83,11 @@ public:
     static const std::string FileDescriptorToken;
     static const std::string FileNameToken;
     static const std::string DecodedLengthToken;
+    static const std::string NumberOfMessagesToken;
 
     Message ();
     Message (std::string msg, HeadersMap headers);
-    Message (std::string ownerId, std::string username, std::string msg, MessageType type, RPC rpcId, ReplyType replyType, time_t timestamp);
+    Message (std::string ownerId, std::string username, std::string msg, MessageType type, RPC rpcId, ReplyType replyType, std::string timestamp);
     Message (std::string ownerId, std::string username, std::string msg, MessageType type = MessageType::Undefined, RPC rpcId = RPC::Undefined, ReplyType replyType = ReplyType::NoReply);
 
     std::string getMessage();

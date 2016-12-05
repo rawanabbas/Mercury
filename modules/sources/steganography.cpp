@@ -89,13 +89,13 @@ bool Steganography::extractImage(std::string src, std::string destination, std::
 
 }
 
-bool Steganography::incrementViews(std::string image, std::string userId, std::string secret) {
+bool Steganography::incrementViews(std::string image, std::string secret) {
 
     //TODO
 
-    if (extractImage(image, "secretImage.jpg", secret)) {
+    if (extractImage(image, "secret.jpg", secret)) {
 
-        if (_extractData("secretImage.jpg", "views.txt", secret)) {
+        if (_extractData("secret.jpg", "views.txt", secret)) {
 
             std::ifstream viewsFile("views.txt");
             
@@ -105,17 +105,7 @@ bool Steganography::incrementViews(std::string image, std::string userId, std::s
                 int views;
                 std::streampos pos;
                 //TO-DO: KEFAYA EL RAQAM.
-                while (viewsFile >> user) {
-
-                    if (user == userId) {
-
-                        pos = viewsFile.tellg();
-                        viewsFile >> views;
-                        break;
-
-                    }
-                }
-
+                viewsFile >> views;
                 views++;
 
                 viewsFile.close();
@@ -123,29 +113,68 @@ bool Steganography::incrementViews(std::string image, std::string userId, std::s
                 std::ofstream updatedViewsFile("views.txt");
 
                 if (updatedViewsFile.is_open()) {
-
-                    updatedViewsFile.seekp(pos);
-                    updatedViewsFile.write(" " + std::to_string(views), (std::to_string(views) + "\n").length());
-                    updatedViewsFile.close();
-
+                    updatedViewsFile << views;
                 }
+
+                return embedImage(image, "secret.jpg", "views.txt", image, secret);
 
             } else {
 
                 std::cerr << "Cannot edit views!" << std::endl;
+                return false;
 
             }
 
         }
 
     } else {
+
         return false;
+
     }
 
 }
 
-bool Steganography::decrementViews(std::string image, std::string userId) {
-    return true;
+bool Steganography::decrementViews(std::string image, std::string secret) {
+    if (extractImage(image, "secret.jpg", secret)) {
+
+        if (_extractData("secret.jpg", "views.txt", secret)) {
+
+            std::ifstream viewsFile("views.txt");
+
+            if (viewsFile.is_open()) {
+
+                std::string user;
+                int views;
+                std::streampos pos;
+                //TO-DO: KEFAYA EL RAQAM.
+                viewsFile >> views;
+                views++;
+
+                viewsFile.close();
+
+                std::ofstream updatedViewsFile("views.txt");
+
+                if (updatedViewsFile.is_open()) {
+                    updatedViewsFile << views;
+                }
+
+               return embedImage(image, "secret.jpg", "views.txt", image, secret);
+
+            } else {
+
+                std::cerr << "Cannot edit views!" << std::endl;
+                return false;
+
+            }
+
+        }
+
+    } else {
+
+        return false;
+
+    }
 }
 
 

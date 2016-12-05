@@ -12,6 +12,8 @@ int Client::_id = 0;
 Client::Client(std::string ownerId, std::string username, std::string host, int serverPort)
     : Thread(), _ownerId(ownerId), _username(username), _callback(nullptr), _host(host), _serverPort(serverPort) {
 
+    std::cout << "IP: " << host << std::endl;
+
     if (!_sock.isValid()) {
 
         perror("Cannot create a client socket.");
@@ -58,10 +60,12 @@ Client::Client(std::string hostname, int serverPort)
 
 
 void Client::setCommand(std::string command, Callback callback) {
-    _lock();
+    lock();
+    std::cout << "Setting to "<< command << std::endl;
     _command.erase();
     _command = command;
-    _unlock();
+    release();
+    std::cout << "Unlocked" << std::endl;
     _callback = callback;
 }
 
@@ -177,6 +181,10 @@ void Client::_clearCommand() {
     _lock();
     _command.erase();
     _unlock();
+}
+
+Client::Client() {
+
 }
 
 void Client::_openFile() {
@@ -309,52 +317,69 @@ void Client::_readFile() {
 
 void Client::_sendFile() {
 
-    std::string fileName, buffer;
+    std::cout << "------------------------";
+    std::cout << "Sending File.....";
+    std::cout << "------------------------";
 
-    std::cout << "Enter File Name: ";
+    if (_argc < 1) {
 
-    std::cin >> fileName;
 
-    File *remoteFile = new File;
-
-    if(_createFile(remoteFile, fileName)) {
-
-        std::cout << "Mapping File to FD " << remoteFile->getFd() << std::endl;
-
-        _files[remoteFile->getFd()] = remoteFile;
-        File file;
-        file.setDirectory(".");
-        FileStatus status = file.open(fileName, FileMode::ReadOnly);
-
-        std::cout << (int) status << std::endl;
-
-        while (!file.isEOF()) {
-
-            buffer = file.read();
-
-            std::cout << "Buffer Size: " << buffer.length() << std::endl;
-
-            status = remoteFile->rwrite(_ownerId, _username, fileName, buffer, _serverSocket);
-
-            if (status != FileStatus::WriteOperationSuccess) {
-
-                std::cout << "Couldn't send file!" << std::endl;
-                break;
-
-            }
-        }
-
-        if (status == FileStatus::WriteOperationSuccess) {
-
-            std::cout << "File is sent!" << std::endl;
-
-        }
+        std::cerr << "Unknown filename" << std::endl;
+        return;
 
     } else {
 
-        std::cout << "Couldn't send file!" << std::endl;
+        std::string fileName = _argv[0];
+
+        File *remoteFile = new File;
+
+        if(_createFile(remoteFile, basename(strdup(fileName.c_str())))) {
+
+            std::cout << "Mapping File to FD " << remoteFile->getFd() << std::endl;
+
+            _files[remoteFile->getFd()] = remoteFile;
+
+            File file;
+            file.setDirectory(dirname(strdup(fileName.c_str())));
+
+            std::cout << "File-Name: " << fileName << std::endl;
+
+            FileStatus status = file.open(basename(strdup(fileName.c_str())), FileMode::ReadOnly);
+
+            std::cout << (int) status << std::endl;
+
+            std::string buffer;
+
+            while (!file.isEOF()) {
+
+                buffer = file.read();
+
+                std::cout << "Buffer Size: " << buffer.length() << std::endl;
+
+                status = remoteFile->rwrite(_ownerId, _username, basename(strdup(fileName.c_str())), buffer, _serverSocket);
+
+                if (status != FileStatus::WriteOperationSuccess) {
+
+                    std::cout << "Couldn't send file!" << std::endl;
+                    break;
+
+                }
+            }
+
+            if (status == FileStatus::WriteOperationSuccess) {
+
+                std::cout << "File is sent!" << std::endl;
+
+            }
+
+        } else {
+
+            std::cout << "Couldn't send file!" << std::endl;
+
+        }
 
     }
+
 }
 
 void Client::_writeFile() {
@@ -389,13 +414,8 @@ void Client::_handleFile() {
     if (_callback != nullptr) {
 
         (*_callback)((void *)this);
-        //        _callback = nullptr;
 
     }
-
-    //    std::cout << "What do you want to do with the file? (s) send file (r) remote read file (o) open remote file (w) write to remote file." << std::endl;
-    //    std::cout << "Command: ";
-    //    std::cin >> msg;
 
     if (_command == std::string(1, (char)Commands::ReadFile)) {
 
@@ -438,99 +458,115 @@ void Client::_register() {
 
     std::string username, password;
 
-    std::cout << "Enter Username: ";
-    std::cin >> username;
+    if (_argc < 2) {
 
-    std::cout << "Enter Password: ";
-    std::cin >> password;
-
-    Message registerationMsg;
-    registerationMsg.setMessageType(MessageType::Register);
-    registerationMsg.setMessage("username: " + username + " password: " + password);
-
-    std::cout << "Registeration Message Formulated!" << std::endl;
-
-    if (!_sendMessage(registerationMsg)) {
-
-        std::cout << "Unauthorized!" << std::endl;
+        std::cerr << "Must provide username and password." << std::endl;
 
     } else {
 
-        std::string auth;
+        username = _argv[0];
+        password = _argv[1];
 
-        if(_receive(auth) != -1) {
+        Message registerationMsg;
+        registerationMsg.setMessageType(MessageType::Register);
+        registerationMsg.setMessage("username: " + username + " password: " + password);
 
-            Message authMessage = Message::deserialize(auth);
+        std::cout << "Registeration Message Formulated!" << std::endl;
 
-            if(authMessage.getMessageType() == MessageType::Authenticated) {
+        if (!_sendMessage(registerationMsg)) {
 
-                _status = ClientStatus::Authenticated;
-                _isAuthenticated = true;
-                _ownerId = authMessage.getMessage();
+            std::cout << "Unauthorized!" << std::endl;
 
-                std::cout << "Authenticated!" << std::endl;
+        } else {
 
+            std::string auth;
+
+            if(_receive(auth) != -1) {
+
+                Message authMessage = Message::deserialize(auth);
+
+                if(authMessage.getMessageType() == MessageType::Authenticated) {
+
+                    _status = ClientStatus::Authenticated;
+                    _isAuthenticated = true;
+                    _ownerId = authMessage.getMessage();
+
+                    std::cout << "Authenticated!" << std::endl;
+
+                } else {
+                    _status = ClientStatus::Unauthenticated;
+                    _isAuthenticated = false;
+                    std::cout << "Unauthorized!" << std::endl;
+
+                }
             } else {
+                perror("Cannot recieve reply!");
                 _status = ClientStatus::Unauthenticated;
                 _isAuthenticated = false;
                 std::cout << "Unauthorized!" << std::endl;
-
             }
-        } else {
-            perror("Cannot recieve reply!");
-            _status = ClientStatus::Unauthenticated;
-            _isAuthenticated = false;
-            std::cout << "Unauthorized!" << std::endl;
         }
     }
 }
 
 void Client::_authenticate() {
 
+    std::cout << "Authenticate()" << std::endl;
+
     _status = ClientStatus::Authenticating;
 
     std::string username, password;
 
-    std::cout << "Enter Username: ";
-    std::cin >> username;
+    if (_argc < 2) {
 
-    std::cout << "Enter Password: ";
-    std::cin >> password;
-
-    Message signInMsg;
-    signInMsg.setMessageType(MessageType::Authenticate);
-    signInMsg.setMessage("username: " + username + " password: " + password);
-
-    if (!_sendMessage(signInMsg)) {
-
-        std::cout << "Unauthorized!" << std::endl;
+        std::cerr << "Must provide username and password." << std::endl;
 
     } else {
 
-        std::string auth;
+        username = _argv[0];
+        password = _argv[1];
 
-        if(_receive(auth) != -1) {
+        //        std::cout << "Username: ";
+        //        std::cin >> username;
+        //        std::cout << "Password: ";
+        //        std::cin >> password;
 
-            Message authMessage = Message::deserialize(auth);
+        Message signInMsg;
+        signInMsg.setMessageType(MessageType::Authenticate);
+        signInMsg.setMessage("username: " + username + " password: " + password);
 
-            if(authMessage.getMessageType() == MessageType::Authenticated) {
+        if (!_sendMessage(signInMsg)) {
 
-                _status = ClientStatus::Authenticated;
-                _isAuthenticated = true;
-                _ownerId = authMessage.getMessage();
-                _username = username;
+            std::cout << "Unauthorized!" << std::endl;
 
-                std::cout << "Authenticated!" << '\n';
-                std::cout << "Your ID: " << _ownerId << std::endl;
-                std::cout << "Your username: " << _username << std::endl;
+        } else {
 
-            } else {
+            std::string auth;
 
-                _status = ClientStatus::Unauthenticated;
+            if(_receive(auth) != -1) {
 
+                Message authMessage = Message::deserialize(auth);
+
+                if(authMessage.getMessageType() == MessageType::Authenticated) {
+
+                    _status = ClientStatus::Authenticated;
+                    _isAuthenticated = true;
+                    _ownerId = authMessage.getMessage();
+                    _username = username;
+
+                    std::cout << "Authenticated!" << '\n';
+                    std::cout << "Your ID: " << _ownerId << std::endl;
+                    std::cout << "Your username: " << _username << std::endl;
+
+                } else {
+
+                    _status = ClientStatus::Unauthenticated;
+
+                }
             }
         }
     }
+
 }
 
 
@@ -547,19 +583,33 @@ void Client::setArguments(const std::vector<std::string> &args) {
 
 void Client::addArgument(std::string arg) {
     _argv.push_back(arg);
+    _argc = _argv.size();
+}
+
+void Client::_resetArguments() {
+
+    _argc = 0;
+    _argv.clear();
+
 }
 
 void Client::_execute() {
 
     std::cout << "Executing!!" << std::endl;
-
     while (true) {
+
+        if (_command.size()) {
+
+            std::cout << "Command: " << _command << std::endl;
+        }
 
         if (_command == std::string(1, (char)Commands::Exit)) {
 
             std::cout << "---------------------------EXIT----------------------------" << std::endl;
 
             _exit(_command);
+            _clearCommand();
+            _resetArguments();
 
             std::cout << "---------------------------EXIT----------------------------" << std::endl;
             break;
@@ -571,6 +621,8 @@ void Client::_execute() {
             std::cout << "---------------------------PING----------------------------" << std::endl;
 
             _ping();
+            _clearCommand();
+            _resetArguments();
 
             std::cout << "---------------------------PING----------------------------" << std::endl;
 
@@ -584,6 +636,8 @@ void Client::_execute() {
             std::cout << "---------------------------FILE----------------------------" << std::endl;
 
             _handleFile();
+            _clearCommand();
+            _resetArguments();
 
             std::cout << "---------------------------FILE----------------------------" << std::endl;
 
@@ -594,6 +648,8 @@ void Client::_execute() {
             std::cout << "---------------------------REGISTER----------------------------" << std::endl;
 
             _register();
+            _clearCommand();
+            _resetArguments();
 
             std::cout << "---------------------------REGISTER----------------------------" << std::endl;
 
@@ -602,12 +658,49 @@ void Client::_execute() {
             std::cout << "---------------------------SIGN-IN----------------------------" << std::endl;
 
             _authenticate();
+            _clearCommand();
+            _resetArguments();
 
             std::cout << "---------------------------SIGN-IN----------------------------" << std::endl;
 
+        } else if (_command == std::string(1, (char)Commands::Query)) {
+
+            std::cout << "---------------------------QUERY----------------------------" << std::endl;
+
+            Message message(_ownerId, _username, "Query", MessageType::QueryAll, RPC::Undefined, ReplyType::NoReply);
+
+            if (_sendMessage(message)) {
+
+                std::string serialized;
+
+                if (_receive(serialized) != -1) {
+
+                    Message msg = Message::deserialize(serialized);
+
+                    std::string filenames = msg.getMessage();
+
+                    std::stringstream ss(filenames);
+                    std::string token;
+
+                    while(ss >> token) {
+
+                        _pendingFiles.push_back(token);
+
+                    }
+
+                }
+
+
+            } else {
+
+                std::cerr << "Couldn't send query!" << std::endl;
+
+            }
+
+            std::cout << "---------------------------QUERY----------------------------" << std::endl;
         }
 
-        _clearCommand();
+
 
         if (_callback != nullptr) {
 

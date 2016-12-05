@@ -422,6 +422,8 @@ FileStatus File::write(std::string str) {
 
     if(!lock())  std::cout << "Locking error " << strerror(errno) << std::endl;
 
+    std::cout << "Directory: " << _dir << std::endl;
+
     _mode = FileMode::ReadWrite;
 
     if (_status != FileStatus::Opened) {
@@ -466,6 +468,8 @@ FileStatus File::write(std::string str, unsigned int length) {
 
     _mode = FileMode::ReadWrite;
 
+    std::cout << "Directory: " << _dir << std::endl;
+
     if (_status != FileStatus::Opened) {
 
         FileStatus status = open(_name, _mode);
@@ -492,7 +496,9 @@ FileStatus File::write(std::string str, unsigned int length) {
 
     if(!unlock())  std::cout << "UnLocking error " << strerror(errno) << std::endl;
 
-    //    close();
+    close();
+
+//    _status = FileStatus::Opened;
 
     return FileStatus::WriteOperationSuccess;
 }
@@ -522,7 +528,6 @@ FileStatus File::rwrite(std::string ownerId, std::string username, std::string d
     message.addHeader(Message::FileModeToken, std::to_string((int) FileMode::ReadOnly));
     message.addHeader(Message::DecodedLengthToken, std::to_string(data.length()));
     message.addHeader(Message::FileDescriptorToken, std::to_string(_fd));
-//    message.addHeader(Message::OwnerIdToken, ownerId);
 
     if (!_sock.sendMessageTo(server, message)) {
 

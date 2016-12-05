@@ -22,14 +22,16 @@
 #include <map>
 #include <sqlite3.h>
 
-#include <netdb.h>
 #include <map>
-#include <sys/socket.h>
-#include <sys/types.h>
+#include <netdb.h>
+#include <libgen.h>
 #include <sys/stat.h>
-#include <sys/select.h>
 #include <sys/file.h>
 #include <arpa/inet.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/select.h>
+
 
 #include <cryptopp/sha.h>
 #include <cryptopp/cryptlib.h>
@@ -43,7 +45,7 @@
 #define MAX_RECV  1024
 #define SUCCESS 200
 #define ERROR 400
-#define MAX_READ 600
+#define MAX_READ 300
 #define MAX_RETRY 3
 
 typedef void (*Callback)(void*);

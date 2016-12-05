@@ -16,6 +16,8 @@ PeerServer::PeerServer(int port) {
 
     }
 
+    setMutex(_peersMutex);
+
     _isRunning = true;
 }
 
@@ -24,6 +26,7 @@ User PeerServer::_parseAuthenticationMessage(Message &msg) {
 
     std::stringstream ss(msg.getMessage());
     std::string token;
+
     while(ss >> token) {
 
         if (token == UsernameToken) {
@@ -51,7 +54,7 @@ bool PeerServer::_authenticate(Message &msg, std::string clientHost) {
 
     if (aUser.isAuthenticated(authUser)) {
 
-        User *user = new User(aUser);
+        User *user = new User(authUser);
         user->setIP(clientHost);
         msg.setMessage(user->getUserID());
         msg.setMessageType(MessageType::Authenticated);
@@ -60,9 +63,13 @@ bool PeerServer::_authenticate(Message &msg, std::string clientHost) {
         _peers[user->getUserID()] = (Peer *)user;
         release();
 
+        std::cout << "Authenticated!" << std::endl;
+
         return true;
 
     } else {
+
+        std::cout << "Unauthorized!" << std::endl;
 
         msg.setMessage("Authentication Error!");
         msg.setMessageType(MessageType::Unauthorized);
@@ -73,7 +80,7 @@ bool PeerServer::_authenticate(Message &msg, std::string clientHost) {
 
 void PeerServer::_spawnTracker(UDPSocket clientSocket, User *user) {
 
-    Tracker *tracker = new Tracker(clientSocket, user, &_peers);
+    Tracker *tracker = new Tracker(clientSocket, user, &_peers, &_allPeers);
     tracker -> setParent((void *)this);
     tracker -> setDoneCallback(_callbackWrapper, (void *)this);
     tracker -> setMutex(_peersMutex);
@@ -115,18 +122,25 @@ bool PeerServer::_register(Message msg, User *user) {
 
     }
 
+    user->signup(username, password);
+
     lock();
     _peers[user->getUserID()] = (Peer *)user;
     release();
 
-    user->setPassword(password);
-    user->setUsername(username);
 
 
     return _db.insert(*user);
 }
 
 void PeerServer::run() {
+
+    _allPeers = _db.fetch();
+
+    std::cout << "------------------------------------------" << '\n';
+    std::cout << "All Peers Size: " << _allPeers.size() << '\n';
+    std::cout << "------------------------------------------" << '\n';
+
 
     while (true) {
 
@@ -141,7 +155,6 @@ void PeerServer::run() {
             if (msg.getMessageType() == MessageType::Authenticate) {
 
                 _authenticate(msg, clientSocket.getHost());
-
                 _sock.sendMessageTo(clientSocket, msg);
 
 
@@ -151,10 +164,14 @@ void PeerServer::run() {
 
                 if (_register(msg, user)) {
 
+                    std::cout << "Authorized!" << std::endl;
+
                     msg.setMessage(user->getUserID());
                     msg.setMessageType(MessageType::Authenticated);
 
                 } else {
+
+                    std::cout << "Unauthorized!" << std::endl;
 
                     msg.setMessage("Error!");
                     msg.setMessageType(MessageType::Unauthorized);

@@ -18,8 +18,8 @@ public:
     static bool embedImage(std::string original, std::string secretImage, std::string data, std::string destination, std::string secret);
     static bool extractImage(std::string src, std::string destination, std::string secret);
 
-    static bool incrementViews(std::string image, std::string userId, std::string secret);
-    static bool decrementViews(std::string image, std::string userId);
+    static bool incrementViews(std::string image, std::string secret);
+    static bool decrementViews(std::string image, std::string secret);
 
     virtual ~Steganography();
 };

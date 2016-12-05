@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "user.hpp"
+#include "database.hpp"
 
 enum class DatabaseStatus {
     Initializing,
@@ -28,14 +29,16 @@ class Database {
     DatabaseStatus _status;
     std::string _name;
 
-//    bool _exec(DatabaseOperation op, int (*callback)(void*,int,char**,char**) = NULL, User user, std::string data);
-
     bool _create();
+
     User _fetch(std::string username);
+    std::vector<Peer> _fetch();
+
     bool _insert(std::string username, std::string password, std::string userID);
     bool _remove(std::string username);
 
-    static int _fetchCallback(void *data, int argc, char **argv, char **column);
+    static int _fetchCallback(void *userPtr, int argc, char **argv, char **column);
+    static int _fetchAllCallback(void *userPtr, int argc, char **argv, char **column);
 
 public:
     Database(std::string name = "database.db");
@@ -43,6 +46,7 @@ public:
     bool insert(User user);
     User fetch(User user);
     User fetch(std::string username);
+    std::vector<Peer> fetch();
     bool remove(User user);
     bool remove(std::string username);
 

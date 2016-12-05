@@ -15,8 +15,11 @@
 #include "message.hpp"
 #include "file.hpp"
 
+typedef std::map<std::string, std::vector<File*> > FilesMap;
+typedef std::map<FileDescriptor, File* > FileDescriptorMap;
 
 enum class JobState {
+
     Running,
     Exit
 };
@@ -31,23 +34,30 @@ private:
     UDPSocket _clientSocket;
     UDPSocket _serverSocket;
 
+    FilesMap * _fileRecipients;
+    pthread_mutex_t _filesMutex;
+
     Message _msg;
 
-    std::map<FileDescriptor, File*> _files;
+    FileDescriptorMap _files;
 
     //Private Function Handlers
 
     bool _sendInfo();
     void _listen();
+
     void _openFile(Message message);
     void _createFile(Message &message);
     void _readFile(Message &message);
     void _writeFile(Message &message);
+
+    bool _createRemoteFile(File *remoteFile, std::string fileName);
+
     JobState _handleMessage(Message message);
 
 public:
 
-    Job (std::string ownerId, std::string username, UDPSocket sock);
+    Job (std::string ownerId, std::string username, UDPSocket sock, FilesMap *files, pthread_mutex_t filesMutex);
     int getJobId() const;
     virtual ~Job ();
     void run();

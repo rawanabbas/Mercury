@@ -7,6 +7,8 @@
 #include "client.hpp"
 #include "message.hpp"
 
+//TODO : Emit Server Disconnected!
+
 enum class Status {
     EstablishingConnection,
     Ping,

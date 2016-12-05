@@ -2,7 +2,9 @@
 
 
 
-ConnectionManager::ConnectionManager(std::string ownerId, std::string username, std::string host, int port) : Heartbeat(ownerId, username, host, port) {
+ConnectionManager::ConnectionManager(std::string ownerId, std::string username, std::string host, int port) : QObject(0), Heartbeat(ownerId, username, host, port) {
+
+    qDebug() << "Connection Manager";
 
     _queryMessage.setMessageType(MessageType::Query);
     _queryMessage.setMessage("Query");
@@ -13,15 +15,13 @@ ConnectionManager::ConnectionManager(std::string ownerId, std::string username, 
     _mStatus = ManagerStatus::FetchingPeers;
 }
 
-Peer ConnectionManager::getPeer(std::string userID) {
+bool ConnectionManager::isPeerOnline(std::string userID) {
 
-    return *_peers[userID];
+    return _peers.count(userID) != 0;
 
 }
 
 PeerMap ConnectionManager::getPeers() {
-
-    while(_mStatus !=  ManagerStatus::FetcheedPeers);
 
     return _peers;
 
@@ -33,6 +33,61 @@ ManagerStatus ConnectionManager::getStatus() {
 
 }
 
+void ConnectionManager::_fetchAllPeers() {
+
+//    qDebug() << "Fetching all users!";
+    Message allPeers(_ownerId, _username, "All", MessageType::QueryAll, RPC::Undefined);
+
+    if (!_sendMessage(allPeers)) {
+
+        std::cerr << "Cannot send query message!" << std::endl;
+
+    } else {
+
+        std::string peers;
+
+        if (_receiveWithTimeout(peers, 5) == -1) {
+
+            std::cerr << "Cannot fetch all peers!" << std::endl;
+
+        } else {
+
+            allPeers = Message::deserialize(peers);
+
+            peers = allPeers.getMessage();
+
+            std::stringstream ss(peers);
+            std::string peerToken;
+
+            while(ss >> peerToken) {
+
+//                qDebug() << QString::fromStdString(peerToken);
+
+                Peer *peer = new Peer;
+
+                std::stringstream ssPeer(peerToken);
+                std::string username, userID;
+
+
+                std::getline(ssPeer, userID, ',');
+                std::getline(ssPeer, username, ';');
+
+                if (username != _username) {
+
+                    peer->setUserID(userID);
+                    peer->setUsername(username);
+
+                    _allPeers.push_back(peer);
+                }
+
+            }
+
+        }
+
+        qDebug() << "Peers Fetched!";
+    }
+}
+
 void ConnectionManager::run() {
 
     if (!_establishConnection()) {
@@ -40,6 +95,8 @@ void ConnectionManager::run() {
         std::cerr << "Cannot connect to the peering server!" << std::endl;
 
     } else {
+
+        _fetchAllPeers();
 
         while(true) {
 
@@ -67,6 +124,8 @@ void ConnectionManager::run() {
 
                         _mStatus = ManagerStatus::FetcheedPeers;
 
+                        emit peersUpdated();
+
                     } else {
 
                         std::cerr << "Undefined response." << std::endl;
@@ -83,7 +142,7 @@ void ConnectionManager::run() {
 
 
             _resetTrials();
-            _wait(20);
+            _wait(5);
 
         }
     }
@@ -91,12 +150,22 @@ void ConnectionManager::run() {
 
 }
 
+
+std::vector<Peer *> ConnectionManager::getAllPeers() const
+{
+    return _allPeers;
+}
+
+void ConnectionManager::setAllPeers(const std::vector<Peer *> &allPeers)
+{
+    _allPeers = allPeers;
+}
 void ConnectionManager::_parsePeerList(std::string peerList) {
 
     std::stringstream ss(peerList);
     std::string peerStr;
 
-//    std::cout << peerList << std::endl;
+    //    std::cout << peerList << std::endl;
 
     while (ss >> peerStr) {
 
@@ -109,17 +178,22 @@ void ConnectionManager::_parsePeerList(std::string peerList) {
 
         if (userID != _ownerId) {
 
+//            qDebug() << "**************************************************";
+//            qDebug() << "userID: " << QString::fromStdString(userID);
+//            qDebug() << "_ownerID: " << QString::fromStdString(_ownerId);
+//            qDebug() << "**************************************************";
+
             Peer *peer = new Peer(userID, username, ip);
 
             lock();
             _peers[userID] = peer;
             release();
 
-        } else {
+        } /*else {
 
             _peers.erase(userID);
 
-        }
+        }*/
 
 
     }

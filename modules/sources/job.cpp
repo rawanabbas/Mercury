@@ -15,7 +15,11 @@ std::string toString (int i) {
 
 int Job::_id = 0;
 
-Job::Job(std::string ownerId, std::string username, UDPSocket sock): _clientSocket(sock), _ownerId(ownerId), _username(username), Thread() {
+Job::Job(std::string ownerId, std::string username, UDPSocket sock, FilesMap *files, pthread_mutex_t filesMutex)
+    : _clientSocket(sock), _ownerId(ownerId), _username(username), _fileRecipients(files), _filesMutex(filesMutex), Thread() {
+
+    setMutex(_filesMutex);
+
     _id++;
 }
 
@@ -122,7 +126,7 @@ void Job::_writeFile(Message &message) {
     std::string fileName = message.getHeader(Message::FileNameToken);
     std::string bytes = message.getMessage();
 
-//    File::parse(message.getMessage(), fd, fileName, mode, bytes);
+    //    File::parse(message.getMessage(), fd, fileName, mode, bytes);
 
     std::cout << "Write FD: " << fd << std::endl;
 
@@ -131,8 +135,6 @@ void Job::_writeFile(Message &message) {
     if  (file != NULL) {
 
         file->setDirectory(message.getHeader(Message::UsernameToken));
-
-//        std::cout << "header-file-name: " << message.getHeader(Message::FileNameToken);
 
         FileStatus status = file->write(message.getHeader(Message::FileNameToken), bytes, bytes.size());
 
@@ -158,7 +160,27 @@ void Job::_writeFile(Message &message) {
     }
 }
 
+bool Job::_createRemoteFile(File *remoteFile, std::string fileName) {
+
+    FileStatus status = remoteFile->rcreate(_ownerId, _username, fileName, FileMode::ReadWrite, _clientSocket);
+
+    std::cout << "Create Operation Status " << (int) status << std::endl;
+
+    if (status == FileStatus::CreateOperationSuccess) {
+
+        std::cout << "File " << fileName << " Remote Fd: " <<  remoteFile->getFd() << " is created!" << std::endl;
+        return true;
+
+    } else {
+
+        std::cout << "File creation failed!" << std::endl;
+        return false;
+
+    }
+}
+
 JobState Job::_handleMessage(Message message) {
+
     std::cout << "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=MSG-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=" << std::endl;
 
     MessageType type;
@@ -202,20 +224,23 @@ JobState Job::_handleMessage(Message message) {
         } else if (message.getRpcId() == RPC::CloseFile) {
 
             std::cout << "------------------------CLOSE FILE-------------------------" << std::endl;
-            //            char details[MAX_READ];
-            //            strcpy(details, message.getMessage().c_str());
-            //            char fileName[100];
-            //            int fd;
-            //            sscanf(details, "N: %s FD: %d", fileName, &fd);
-            //            File file;
-            //            file.setFd(fd);
-            //            file.setName(fileName);
-            //            FileStatus status = file.close();
-            //            if (status == FileStatus::Closed) {
-            //                std::cout << "File is closed!" << std::endl;
-            //            } else {
-            //                std::cout << "Error Closing the File!" << std::endl;
-            //            }
+
+            File *file = _files[std::stoi(message.getHeader(Message::FileDescriptorToken))];
+
+            FileStatus status = file->close();
+
+            if (status == FileStatus::Closed) {
+
+                std::cout << "File is closed!" << std::endl;
+                message.setReplyType(ReplyType::Success);
+
+            } else {
+
+                std::cout << "Error Closing the File!" << std::endl;
+                message.setReplyType(ReplyType::Failure);
+
+            }
+
             std::cout << "------------------------CLOSE FILE-------------------------" << std::endl;
 
         } else {
@@ -223,9 +248,30 @@ JobState Job::_handleMessage(Message message) {
             std::cout << "------------------------NO RPC-------------------------" << std::endl;
             std::cerr << "No RPC ID specified." << std::endl;
             std::cout << "------------------------NO RPC-------------------------" << std::endl;
+
             message.setReplyType(ReplyType::Failure);
 
         }
+    } else if (message.getMessageType() == MessageType::QueryAll) {
+        std::cout << "------------------------QUERY-------------------------" << std::endl;
+
+        std::string recpients = message.getHeader(Message::UsernameToken);
+
+        std::vector <File *> files = (*_fileRecipients)[recpients];
+
+        std::string filenames = "";
+
+        for (int i = 0; i < files.size(); ++i) {
+
+            filenames += files[i]->getName() + "\n";
+
+        }
+
+        message.setMessage(filenames);
+        message.setOwnerId(_ownerId);
+        message.addHeader(Message::UsernameToken, _username);
+
+        std::cout << "------------------------QUERY-------------------------" << std::endl;
     }
 
     message.setMessageType(type);

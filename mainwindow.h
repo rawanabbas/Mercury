@@ -42,11 +42,10 @@ public:
 
     virtual ~MainWindow();
 
-    void _updatePeerTable(std::vector<Peer*> peers, PeerMap peerMap);
-    void _setupPeerTable();
 
     std::vector<Peer *> getPeers() const;
 
+    std::vector<std::string> pendingFiles() const;
 public slots:
 
     void display();
@@ -73,8 +72,14 @@ private:
     std::string _username;
     std::string _id;
 
+    std::vector<std::string> _pendingFiles;
+
     std::vector<Peer*> _peers;
     PeerMap _onlinePeers;
+
+    void _setupPeerTable();
+    void _queryOnlinePeers();
+    void _updatePeerTable(std::vector<Peer*> peers);
 };
 
 #endif // MAINWINDOW_H

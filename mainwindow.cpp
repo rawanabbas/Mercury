@@ -52,7 +52,7 @@ void MainWindow::display() {
     this->show();
 }
 
-void MainWindow::_updatePeerTable(std::vector<Peer*> peers, PeerMap peerMap) {
+void MainWindow::_updatePeerTable(std::vector<Peer*> peers) {
 
     QTableWidgetItem *prototype = new QTableWidgetItem;
     prototype->setTextAlignment(Qt::AlignCenter);
@@ -117,6 +117,35 @@ void MainWindow::_setupPeerTable() {
 
 }
 
+std::vector<std::vector<std::string>> pendingRemoteFiles;
+
+void MainWindow::_queryOnlinePeers() {
+
+    PeerMap::iterator it;
+
+    for (it = _onlinePeers.begin(); it != _onlinePeers.end(); ++it) {
+
+        Client * remoteClient = new Client(_id, _username, it->second->getIP(), 3001);
+        remoteClient->setCommand(std::string(1, (char)Commands::Query), [=](void *client){
+
+            std::vector<std::string> pending = ((Client *) client)->getPendingFiles();
+            pendingRemoteFiles.push_back(pending);
+
+        });
+    }
+
+    for (size_t i = 0; i < pendingRemoteFiles.size(); i++) {
+
+        for (size_t j = 0; j < pendingRemoteFiles[i].size(); j++) {
+
+            qDebug() << "File-Name: " << QString::fromStdString(pendingRemoteFiles[i][j]);
+
+        }
+
+    }
+
+}
+
 void MainWindow::updatePeerTable() {
 
 
@@ -124,9 +153,9 @@ void MainWindow::updatePeerTable() {
 
     _onlinePeers = _manager->getPeers();
 
-    _updatePeerTable(_peers, _onlinePeers);
+    _updatePeerTable(_peers);
 
-
+    _queryOnlinePeers();
 }
 
 MainWindow *window;
@@ -140,50 +169,50 @@ void MainWindow::upload() {
     std::vector<int> indicies = _upload->selectedPeers();
     image = _upload->image();
 
-    for (int i = 0; i < indicies.size(); ++i) {
+    for (unsigned int i = 0; i < indicies.size(); ++i) {
 
         std::string username = _peers[indicies[i]]->getUsername();
         std::string userId = _peers[indicies[i]]->getUserID();
 
-        //        if (_manager->isPeerOnline(userId)) {
+        if (_manager->isPeerOnline(userId)) {
 
-        Client *client;
+            Client *client;
 
-        if (_clients.count(username) != 0) {
+            if (_clients.count(username) != 0) {
 
-            client = _clients[username];
+                client = _clients[username];
+
+            } else {
+
+                client = new Client(_id, _username, _onlinePeers[userId]->getIP(), 3001);
+
+            }
+
+            client->start();
+
+            client->setCommand(std::string(1, (char)Commands::EstablishConnection), [=](void *client) {
+
+                ((Client *) client)->setCommand(std::string(1, (char)Commands::File), [=](void *client) {
+
+                    qDebug() << "Sending File!";
+
+                    ((Client *) client)->addArgument(image);
+
+                    ((Client *) client)->setCommand(std::string(1, (char)Commands::SendFile), [=](void *client){
+
+                        qDebug() << "file sent!";
+                        ((Client *) client)->join();
+
+                    });
+
+                });
+            });
 
         } else {
 
-            client = new Client(_id, _username, _onlinePeers[userId]->getIP(), 3001);
+            _server->addFileRecepient(username, image);
 
         }
-
-        client->start();
-        //            window = this;
-
-        //                        client->addArgument(image);
-
-        client->setCommand(std::string(1, (char)Commands::EstablishConnection), [=](void *client) {
-
-            ((Client *) client)->setCommand(std::string(1, (char)Commands::File), [=](void *client) {
-
-                qDebug() << "Sending File!";
-
-                ((Client *) client)->addArgument(image);
-                ((Client *) client)->setCommand(std::string(1, (char)Commands::SendFile), [=](void *client){
-                    qDebug() << "file sent!";
-                    ((Client *) client)->join();
-                });
-
-            });
-        });
-
-        //        } else {
-
-        //TODO: Add file reciepents
-
-        //        }
 
     }
 
@@ -223,6 +252,12 @@ MainWindow::~MainWindow() {
 
     }
 
+    for (ClientMap::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+
+        it->second->join();
+
+    }
+
     delete _server;
     delete _manager;
     delete _heartbeat;
@@ -238,8 +273,10 @@ void MainWindow::on_uploadBtn_clicked() {
     _upload->show();
 
 }
+std::vector<std::string> MainWindow::pendingFiles() const {
+    return _pendingFiles;
+}
+
 std::vector<Peer *> MainWindow::getPeers() const {
     return _peers;
 }
-
-

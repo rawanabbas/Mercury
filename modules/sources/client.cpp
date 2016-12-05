@@ -593,6 +593,11 @@ void Client::_resetArguments() {
 
 }
 
+
+std::vector<std::string> Client::getPendingFiles() const {
+    return _pendingFiles;
+}
+
 void Client::_execute() {
 
     std::cout << "Executing!!" << std::endl;

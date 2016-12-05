@@ -15,7 +15,7 @@
 #include "message.hpp"
 #include "file.hpp"
 
-typedef std::map<std::string, std::vector<File*> > FilesMap;
+typedef std::map<std::string, std::vector<std::string> > FilesMap;
 typedef std::map<FileDescriptor, File* > FileDescriptorMap;
 
 enum class JobState {

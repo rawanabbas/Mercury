@@ -48,6 +48,8 @@ public:
     void writeBuffer(char * msg);
     char * readBuffer(int start = 0, int end = MAX_RECV);
 
+    void addFileRecepient(std::string username, std::string filename);
+
     virtual ~Server ();
 };
 

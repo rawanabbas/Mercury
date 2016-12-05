@@ -257,14 +257,12 @@ JobState Job::_handleMessage(Message message) {
 
         std::string recpients = message.getHeader(Message::UsernameToken);
 
-        std::vector <File *> files = (*_fileRecipients)[recpients];
+        std::vector <std::string> files = (*_fileRecipients)[recpients];
 
         std::string filenames = "";
 
         for (int i = 0; i < files.size(); ++i) {
-
-            filenames += files[i]->getName() + "\n";
-
+            filenames += files[i] + "\n";
         }
 
         message.setMessage(filenames);

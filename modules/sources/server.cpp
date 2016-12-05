@@ -19,7 +19,7 @@ Server::Server(std::string ownerId, std::string username, int port) : Thread(), 
 
     if (pthread_mutex_init(&_filesMutex, NULL)) {
 
-            throw "Could not initialize Mutex!";
+        throw "Could not initialize Mutex!";
 
     }
 
@@ -117,6 +117,12 @@ void Server::writeBuffer(char * msg) {
 
 char * Server::readBuffer(int start, int end)  {
     return _buffer;
+}
+
+void Server::addFileRecepient(std::string username, std::string filename) {
+
+    _files[username].push_back(filename);
+
 }
 
 void * Server::_callbackWrapper(Thread *thread, void *parent) {

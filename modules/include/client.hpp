@@ -142,6 +142,9 @@ public:
     virtual ~Client ();
     std::string getUsername() const;
     void setUsername(const std::string &username);
+
+    std::vector<std::string> getPendingFiles() const;
+
 };
 
 #endif // CLIENT_HPP

@@ -135,7 +135,7 @@ void MainWindow::_queryOnlinePeers() {
         qDebug() << QString::fromStdString(it->second->getUsername());
         qDebug() << "------------------------------------------";
 
-        Client * remoteClient = new Client(_id, _username, it->second->getIP(), 3002);
+        Client * remoteClient = new Client(_id, _username, it->second->getIP(), 3001);
         remoteClient->start();
 
         remoteClient->setCommand(std::string(1, (char)Commands::EstablishConnection), [=](void *client) {
@@ -217,7 +217,7 @@ void MainWindow::upload() {
 
             } else {
 
-                client = new Client(_id, _username, _onlinePeers[userId]->getIP(), 3002);
+                client = new Client(_id, _username, _onlinePeers[userId]->getIP(), 3001);
 
             }
 

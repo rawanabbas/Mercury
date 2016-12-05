@@ -15,6 +15,7 @@
 #include "heartbeat.hpp"
 #include "peer.hpp"
 #include "server.hpp"
+#include "steganography.hpp"
 
 
 #include "login.hpp"
@@ -76,6 +77,9 @@ private:
 
     std::vector<Peer*> _peers;
     PeerMap _onlinePeers;
+
+
+    bool flag;
 
     void _setupPeerTable();
     void _queryOnlinePeers();

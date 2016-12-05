@@ -67,6 +67,7 @@ void Upload::on_okBtn_clicked() {
     Package pkg;
 
     _image = ui->pathEdit->text().toStdString();
+    _views = ui->lineEdit->text().toInt();
 
     this->close();
 
@@ -81,6 +82,10 @@ void Upload::on_cancelBtn_clicked() {
 
 std::string Upload::image() const {
     return _image;
+}
+
+int Upload::views() const {
+    return _views;
 }
 
 std::vector<int> Upload::selectedPeers() const {

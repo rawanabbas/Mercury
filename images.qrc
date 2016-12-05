@@ -20,4 +20,7 @@
         <file>build/offline-dot-small.png</file>
         <file>build/online-dot-small.png</file>
     </qresource>
+    <qresource prefix="/cover">
+        <file>cover.jpg</file>
+    </qresource>
 </RCC>

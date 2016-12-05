@@ -8,7 +8,15 @@ Steganography::Steganography() {
 
 bool Steganography::_embedData(std::string file, std::string data, std::string secret) {
 
-    std::string command = SteganographyCommand + " embed -ef " + data + " -cf " + file + " -p " + secret;
+
+    std::string dir = dirname(strdup(file.c_str()));
+    std::string views = dir + "/views.txt";
+
+    int fd = creat(views.c_str(), S_IRWXU);
+    write(fd, data.c_str(), data.size());
+    close(fd);
+
+    std::string command = SteganographyCommand + " embed -ef " + views + " -cf " + file + " -p " + secret;
 
     if (system(command.c_str()) != -1) {
 
@@ -44,7 +52,7 @@ bool Steganography::_extractData(std::string src, std::string destination, std::
 }
 
 
-bool Steganography::embedImage(std::string original, std::string secretImage, std::string data, std::string destination, std::string secret) {
+bool Steganography::embedImage(std::string original, std::string secretImage, std::string data, std::string &destination, std::string secret) {
 
 
     if(_embedData(original, data, secret)) {
@@ -70,7 +78,7 @@ bool Steganography::embedImage(std::string original, std::string secretImage, st
 
 }
 
-bool Steganography::extractImage(std::string src, std::string destination, std::string secret) {
+bool Steganography::extractImage(std::string src, std::string &destination, std::string secret) {
 
     std::string command = SteganographyCommand + " extract -sf " + src + " -xf " + destination + " -p " + secret;
 
@@ -93,7 +101,7 @@ bool Steganography::incrementViews(std::string image, std::string secret) {
 
     //TODO
 
-    if (extractImage(image, "secret.jpg", secret)) {
+    if (extractImage(image, image, secret)) {
 
         if (_extractData("secret.jpg", "views.txt", secret)) {
 
@@ -136,9 +144,10 @@ bool Steganography::incrementViews(std::string image, std::string secret) {
 }
 
 bool Steganography::decrementViews(std::string image, std::string secret) {
-    if (extractImage(image, "secret.jpg", secret)) {
 
-        if (_extractData("secret.jpg", "views.txt", secret)) {
+    if (extractImage(image, image, secret)) {
+
+        if (_extractData(image, "views.txt", secret)) {
 
             std::ifstream viewsFile("views.txt");
 

@@ -2,7 +2,7 @@
 #include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent), ui(new Ui::MainWindow), _manager(NULL), _server(NULL), _heartbeat(NULL) {
+    QMainWindow(parent), ui(new Ui::MainWindow), _manager(NULL), _server(NULL), _heartbeat(NULL), flag(true) {
 
 
 
@@ -37,7 +37,7 @@ void MainWindow::display() {
     setId(_login->getId());
     _login->close();
 
-    _server = new Server(getId(), getUsername(), 3002);
+    _server = new Server(getId(), getUsername(), 3001);
     _heartbeat = new Heartbeat(getId(), getUsername(), "127.0.0.1", 3010);
     _manager = new ConnectionManager(getId(), getUsername(), "127.0.0.1", 3010);
 
@@ -121,28 +121,53 @@ std::vector<std::vector<std::string>> pendingRemoteFiles;
 
 void MainWindow::_queryOnlinePeers() {
 
+    qDebug() << "Querying online peerss..";
+
+    std::vector<Client*> remoteClients;
+
     PeerMap::iterator it;
+
+    qDebug() << _onlinePeers.size();
 
     for (it = _onlinePeers.begin(); it != _onlinePeers.end(); ++it) {
 
-        Client * remoteClient = new Client(_id, _username, it->second->getIP(), 3001);
-        remoteClient->setCommand(std::string(1, (char)Commands::Query), [=](void *client){
+        qDebug() << "------------------------------------------";
+        qDebug() << QString::fromStdString(it->second->getUsername());
+        qDebug() << "------------------------------------------";
 
-            std::vector<std::string> pending = ((Client *) client)->getPendingFiles();
-            pendingRemoteFiles.push_back(pending);
+        Client * remoteClient = new Client(_id, _username, it->second->getIP(), 3002);
+        remoteClient->start();
 
+        remoteClient->setCommand(std::string(1, (char)Commands::EstablishConnection), [=](void *client) {
+
+
+            ((Client *) client)->setCommand(std::string(1, (char)Commands::Query), [=](void *client) {
+
+                qDebug() << "FILESSSSS!!!";
+
+                std::vector<std::string> pending = ((Client *) client)->getPendingFiles();
+                pendingRemoteFiles.push_back(pending);
+
+            });
         });
     }
 
-    for (size_t i = 0; i < pendingRemoteFiles.size(); i++) {
 
-        for (size_t j = 0; j < pendingRemoteFiles[i].size(); j++) {
+    QTableWidget *remoteImages = ui->remoteImages;
+    int row = 0;
 
-            qDebug() << "File-Name: " << QString::fromStdString(pendingRemoteFiles[i][j]);
+    for (size_t i = 0; i < pendingRemoteFiles.size(); ++i) {
+
+        for (size_t j = 0; j < pendingRemoteFiles[i].size(); ++j) {
+
+            remoteImages->setRowCount(row + 1);
+            remoteImages->setItem(row, 0, new QTableWidgetItem(QString::fromStdString(pendingRemoteFiles[i][j])));
+            row++;
 
         }
 
     }
+
 
 }
 
@@ -155,11 +180,17 @@ void MainWindow::updatePeerTable() {
 
     _updatePeerTable(_peers);
 
-    _queryOnlinePeers();
+    if (flag) {
+
+        flag = false;
+        _queryOnlinePeers();
+
+    }
 }
 
 MainWindow *window;
 std::string image;
+int views;
 
 void MainWindow::upload() {
 
@@ -168,6 +199,8 @@ void MainWindow::upload() {
 
     std::vector<int> indicies = _upload->selectedPeers();
     image = _upload->image();
+    views = _upload->views();
+
 
     for (unsigned int i = 0; i < indicies.size(); ++i) {
 
@@ -184,7 +217,7 @@ void MainWindow::upload() {
 
             } else {
 
-                client = new Client(_id, _username, _onlinePeers[userId]->getIP(), 3001);
+                client = new Client(_id, _username, _onlinePeers[userId]->getIP(), 3002);
 
             }
 
@@ -196,9 +229,11 @@ void MainWindow::upload() {
 
                     qDebug() << "Sending File!";
 
+                    Steganography::embedImage("cover.jpg", image, std::to_string(views), image, ((Client *) client)->getOwnerId());
+
                     ((Client *) client)->addArgument(image);
 
-                    ((Client *) client)->setCommand(std::string(1, (char)Commands::SendFile), [=](void *client){
+                    ((Client *) client)->setCommand(std::string(1, (char)Commands::SendFile), [=](void *client) {
 
                         qDebug() << "file sent!";
                         ((Client *) client)->join();
@@ -209,7 +244,7 @@ void MainWindow::upload() {
             });
 
         } else {
-
+            qDebug() << "User is offline adding it to the cache!";
             _server->addFileRecepient(username, image);
 
         }

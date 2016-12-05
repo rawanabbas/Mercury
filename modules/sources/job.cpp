@@ -268,7 +268,7 @@ JobState Job::_handleMessage(Message message) {
         message.setMessage(filenames);
         message.setOwnerId(_ownerId);
         message.addHeader(Message::UsernameToken, _username);
-
+        std::cout << filenames << std::endl;
         std::cout << "------------------------QUERY-------------------------" << std::endl;
     }
 

@@ -60,13 +60,15 @@ Client::Client(std::string hostname, int serverPort)
 
 
 void Client::setCommand(std::string command, Callback callback) {
+    std::cout << "setCommand " << command << " " << (callback == nullptr) << std::endl;
     lock();
-    std::cout << "Setting to "<< command << std::endl;
+//    std::cout << "Setting to "<< command << std::endl;
     _command.erase();
     _command = command;
-    release();
-    std::cout << "Unlocked" << std::endl;
     _callback = callback;
+    release();
+    std::cout << (_callback == nullptr) << std::endl;
+//    std::cout << "Unlocked" << std::endl;
 }
 
 bool Client::isAuthenticated() {
@@ -606,8 +608,8 @@ void Client::_execute() {
         if (_command.size()) {
 
             std::cout << "Command: " << _command << std::endl;
+            std::cout << (_callback == nullptr) << std::endl;
         }
-
         if (_command == std::string(1, (char)Commands::Exit)) {
 
             std::cout << "---------------------------EXIT----------------------------" << std::endl;
@@ -670,7 +672,7 @@ void Client::_execute() {
 
         } else if (_command == std::string(1, (char)Commands::Query)) {
 
-            std::cout << "---------------------------QUERY----------------------------" << std::endl;
+//            std::cout << "---------------------------QUERY----------------------------" << std::endl;
 
             Message message(_ownerId, _username, "Query", MessageType::QueryAll, RPC::Undefined, ReplyType::NoReply);
 
@@ -687,6 +689,8 @@ void Client::_execute() {
                     std::stringstream ss(filenames);
                     std::string token;
 
+                    std::cout << "Remote Files: " << filenames << std::endl;
+
                     while(ss >> token) {
 
                         _pendingFiles.push_back(token);
@@ -702,24 +706,24 @@ void Client::_execute() {
 
             }
 
-            std::cout << "---------------------------QUERY----------------------------" << std::endl;
+//            std::cout << "---------------------------QUERY----------------------------" << std::endl;
+            _clearCommand();
         }
 
 
 
         if (_callback != nullptr) {
-
             (*_callback)((void *)this);
 
-            if (_command != std::string(1, (char)Commands::File)) {
-
+            if (_command != std::string(1, (char)Commands::File) && _command != std::string(1, (char)Commands::Query)) {
+                std::cout << "Clearing.." << std::endl;
                 _callback = nullptr;
-
             }
 
 
         }
     }
+
     std::cout << "Bye!" << std::endl;
 }
 

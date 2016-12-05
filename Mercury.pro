@@ -30,7 +30,8 @@ SOURCES += mainwindow.cpp \
     modules/sources/connection_manager.cpp \
     modules/sources/steganography.cpp \
     login.cpp \
-    upload.cpp
+    upload.cpp \
+    imageviewer.cpp
     login.cpp
 
 HEADERS  += mainwindow.h \
@@ -48,7 +49,8 @@ HEADERS  += mainwindow.h \
     modules/include/steganography.hpp \
     modules/include/stdafx.h \
     login.hpp \
-    upload.hpp
+    upload.hpp \
+    imageviewer.hpp
     login.hpp
 
 
@@ -57,7 +59,8 @@ RC_FILE += mercury.rc
 
 FORMS    += mainwindow.ui \
     login.ui \
-    upload.ui
+    upload.ui \
+    imageviewer.ui
 
 RESOURCES += \
     images.qrc

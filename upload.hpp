@@ -29,6 +29,7 @@ public:
     void setPeers(std::vector<Peer*> *peers);
     std::vector<int> selectedPeers() const;
     std::string image() const;
+    int views() const;
 
 
 private slots:
@@ -52,6 +53,7 @@ private:
 
     std::vector<int> _selectedPeers;
     std::string _image;
+    int _views;
 
 };
 

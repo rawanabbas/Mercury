@@ -32,7 +32,7 @@ Client::Client(std::string ownerId, std::string username, std::string host, int 
         perror("Cannot initialize mutex.");
     }
 
-    setMutex(_commandMutex);
+    setMutex(&_commandMutex);
 
     //    _ping();
 
@@ -54,6 +54,7 @@ Client::Client(std::string hostname, int serverPort)
 
     }
 
+    setMutex(&_commandMutex);
 
     _id++;
 }
@@ -61,14 +62,15 @@ Client::Client(std::string hostname, int serverPort)
 
 void Client::setCommand(std::string command, Callback callback) {
     std::cout << "setCommand " << command << " " << (callback == nullptr) << std::endl;
-    lock();
-//    std::cout << "Setting to "<< command << std::endl;
+    //lock();
+    std::cout << "Locked" << std::endl;
+    //    std::cout << "Setting to "<< command << std::endl;
     _command.erase();
     _command = command;
     _callback = callback;
-    release();
+    //release();
     std::cout << (_callback == nullptr) << std::endl;
-//    std::cout << "Unlocked" << std::endl;
+    //    std::cout << "Unlocked" << std::endl;
 }
 
 bool Client::isAuthenticated() {
@@ -180,9 +182,9 @@ int Client::_unlock() {
 }
 
 void Client::_clearCommand() {
-    _lock();
+    //_lock();
     _command.erase();
-    _unlock();
+    //_unlock();
 }
 
 Client::Client() {
@@ -304,15 +306,15 @@ void Client::_readFile() {
     File file;
     file.setName(fileName);
 
-    FileStatus status = file.rread(_ownerId, _username, _serverSocket);
+    std::string status = file.rread(_ownerId, _username, _serverSocket);
 
-    if (status == FileStatus::ReadOperationSuccess) {
+    if (file.getStatus() == FileStatus::ReadOperationSuccess) {
 
         std::cout << "File is read!" << std::endl;
 
     } else {
 
-        std::cout << "Read Operation Status: " << (int) status << std::endl;
+        std::cout << "Read Operation Status: " << (int) file.getStatus() << std::endl;
 
     }
 }
@@ -384,6 +386,42 @@ void Client::_sendFile() {
 
 }
 
+void Client::_recieveFile() {
+
+    std::cout << "------------------------";
+    std::cout << "Recieving File.....";
+    std::cout << "------------------------";
+
+
+    if (_argc < 1) {
+
+        std::cerr << "Must Specify filename!" << std::endl;
+
+    } else {
+
+        std::string filename = _argv[0];
+
+        Message message;
+
+        message.setMessageType(MessageType::SendFile);
+        message.setReplyType(ReplyType::NoReply);
+        message.setMessage(filename);
+        message.setOwnerId(_ownerId);
+        message.addHeader(Message::UsernameToken, _username);
+        if (!_sendMessage(message)) {
+
+            perror("Cannot send request!");
+
+        } else {
+
+
+
+
+        }
+    }
+
+}
+
 void Client::_writeFile() {
 
     std::string fileName, txt;
@@ -439,6 +477,9 @@ void Client::_handleFile() {
 
         _sendFile();
 
+    } else if (_command == std::string(1, (char)Commands::RecieveFile)) {
+
+        _recieveFile();
     }
 }
 std::string Client::getOwnerId() const {
@@ -672,7 +713,7 @@ void Client::_execute() {
 
         } else if (_command == std::string(1, (char)Commands::Query)) {
 
-//            std::cout << "---------------------------QUERY----------------------------" << std::endl;
+            //            std::cout << "---------------------------QUERY----------------------------" << std::endl;
 
             Message message(_ownerId, _username, "Query", MessageType::QueryAll, RPC::Undefined, ReplyType::NoReply);
 
@@ -706,7 +747,7 @@ void Client::_execute() {
 
             }
 
-//            std::cout << "---------------------------QUERY----------------------------" << std::endl;
+            //            std::cout << "---------------------------QUERY----------------------------" << std::endl;
             _clearCommand();
         }
 

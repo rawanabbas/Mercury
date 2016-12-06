@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent), ui(new Ui::MainWindow), _manager(NULL), _server(NULL), _heartbeat(NULL), flag(true) {
 
@@ -15,11 +14,29 @@ MainWindow::MainWindow(QWidget *parent) :
     _upload = new Upload(this);
     _upload->setWindowTitle("Upload Image");
 
+    _viewer = new ImageViewer(this);
+    _viewer->setWindowTitle("Decrypted Image");
+
     connect(_login, SIGNAL(authenticated()), this, SLOT(display()));
     connect(_upload, SIGNAL(ready()), this, SLOT(upload()));
     connect(_upload, SIGNAL(cancelled()), this, SLOT(cancelUpload()));
+    QTimer *onlineChecker = new QTimer(this);
+    onlineChecker->setInterval(10000);
+    onlineChecker->setSingleShot(false);
+    connect(onlineChecker, SIGNAL(timeout()), this, SLOT(checkPendingFiles()));
+    onlineChecker->start();
 
+    refreshFiles();
+    QTimer *myFilesChecker = new QTimer(this);
+    myFilesChecker->setInterval(4000);
+    myFilesChecker->setSingleShot(false);
+    connect(myFilesChecker, SIGNAL(timeout()), this, SLOT(refreshFiles()));
+    myFilesChecker->start();
+
+
+    connect(ui->localImages, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(openImage(QModelIndex)));
 }
+
 
 
 std::string MainWindow::getId() const {
@@ -32,7 +49,7 @@ void MainWindow::setId(const std::string &id) {
 
 
 void MainWindow::display() {
-
+    std::cout << "USERNAME: " << _login->getUsername() << std::endl;
     setUsername(_login->getUsername());
     setId(_login->getId());
     _login->close();
@@ -192,6 +209,46 @@ MainWindow *window;
 std::string image;
 int views;
 
+void MainWindow::_uploadImageToClient(std::string userId) {
+    Client *client;
+    std::string username = _onlinePeers[userId]->getUsername();
+    if (_clients.count(username) != 0) {
+
+        client = _clients[username];
+
+    } else {
+        client = new Client(_id, _username, _onlinePeers[userId]->getIP(), 3001);
+        //client = new Client(_id, _username, "10.7.57.35", 3001);
+
+    }
+    std::string newImage = image + "_steg.jpg";
+    Steganography::embedImage("cover.jpg", image, std::to_string(views), newImage, "123456");
+    image = newImage;
+    std::cout << "ImagePath: " << image << std::endl;
+
+    client->start();
+
+    client->setCommand(std::string(1, (char)Commands::EstablishConnection), [=](void *client) {
+
+        ((Client *) client)->setCommand(std::string(1, (char)Commands::File), [=](void *client) {
+
+            qDebug() << "Sending File!";
+
+//                    Steganography::embedImage("cover.jpg", image, std::to_string(views), image, ((Client *) client)->getOwnerId());
+
+            ((Client *) client)->addArgument(image);
+
+            ((Client *) client)->setCommand(std::string(1, (char)Commands::SendFile), [=](void *client) {
+
+                qDebug() << "file sent!";
+                ((Client *) client)->join();
+
+            });
+
+        });
+    });
+}
+
 void MainWindow::upload() {
 
     this->show();
@@ -204,48 +261,14 @@ void MainWindow::upload() {
 
     for (unsigned int i = 0; i < indicies.size(); ++i) {
 
-        std::string username = _peers[indicies[i]]->getUsername();
         std::string userId = _peers[indicies[i]]->getUserID();
 
         if (_manager->isPeerOnline(userId)) {
-
-            Client *client;
-
-            if (_clients.count(username) != 0) {
-
-                client = _clients[username];
-
-            } else {
-
-                client = new Client(_id, _username, _onlinePeers[userId]->getIP(), 3001);
-
-            }
-
-            client->start();
-
-            client->setCommand(std::string(1, (char)Commands::EstablishConnection), [=](void *client) {
-
-                ((Client *) client)->setCommand(std::string(1, (char)Commands::File), [=](void *client) {
-
-                    qDebug() << "Sending File!";
-
-                    Steganography::embedImage("cover.jpg", image, std::to_string(views), image, ((Client *) client)->getOwnerId());
-
-                    ((Client *) client)->addArgument(image);
-
-                    ((Client *) client)->setCommand(std::string(1, (char)Commands::SendFile), [=](void *client) {
-
-                        qDebug() << "file sent!";
-                        ((Client *) client)->join();
-
-                    });
-
-                });
-            });
-
+            qDebug() << "Sending..";
+            _uploadImageToClient(userId);
         } else {
             qDebug() << "User is offline adding it to the cache!";
-            _server->addFileRecepient(username, image);
+            _server->addFileRecepient(userId, image);
 
         }
 
@@ -298,6 +321,52 @@ MainWindow::~MainWindow() {
     delete _heartbeat;
     delete ui;
 
+}
+
+
+void MainWindow::checkPendingFiles() {
+    FilesMap &pendingFiles = _server->getPendingFiles();
+    for (auto it = pendingFiles.begin(); it != pendingFiles.end(); ++it) {
+        std::string userId = it->first;
+        if (_manager->isPeerOnline(userId)) {
+            std::cout << "Sending pending to " << _onlinePeers[userId]->getUsername();
+            for (int i = 0; i < it->second.size(); i++) {
+                std::cout << "Sending " << it->second[i] << std::endl;
+                image = it->second[i];
+                _uploadImageToClient(userId);
+                it->second.erase(it->second.begin() + i--);
+            }
+        }
+    }
+}
+
+void MainWindow::refreshFiles() {
+    QDir currentPath = QDir::currentPath();
+    QStringList files = currentPath.entryList(QDir::NoDotAndDotDot | QDir::Dirs);
+    ui->localImages->clear();
+
+    for (int i = 0; i < files.size(); i++) {
+        QString directorPath = currentPath.absolutePath() + QDir::separator() + files.at(i);
+        QDir userDir(directorPath);
+        QStringList images = userDir.entryList(QDir::NoDotAndDotDot | QDir::Files);
+        for (int i = 0; i < images.size(); i++) {
+            QString imagePath = userDir.absolutePath() + QDir::separator() + images.at(i);
+            ui->localImages->addItem(imagePath);
+        }
+    }
+}
+
+void MainWindow::openImage(QModelIndex index) {
+    if (!index.isValid())
+        return;
+    QString imagePath = ui->localImages->item(index.row())->text();
+    QString tempPath = QFileInfo(imagePath).absoluteDir().absolutePath() + QDir::separator() + "temp.jpg";
+    if (Steganography::extractImage(imagePath.toStdString(), tempPath.toStdString(), "123456")) {
+        _viewer->setImage(tempPath);
+        _viewer->show();
+        unlink(tempPath.toStdString().c_str());
+        Steganography::decrementViews(imagePath.toStdString(), "123456");
+    }
 }
 
 void MainWindow::on_uploadBtn_clicked() {

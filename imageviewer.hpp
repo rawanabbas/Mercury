@@ -7,14 +7,13 @@ namespace Ui {
         class ImageViewer;
     }
 
-class ImageViewer : public QDialog
-{
+class ImageViewer : public QDialog {
     Q_OBJECT
 
 public:
     explicit ImageViewer(QWidget *parent = 0);
     ~ImageViewer();
-
+    void setImage(QString imagePath);
 private:
     Ui::ImageViewer *ui;
 };

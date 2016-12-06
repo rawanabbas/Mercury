@@ -130,8 +130,9 @@ std::string Message::serialize() {
 
     Decoder::encode(_msg, &serialized);
     addHeader(MessageToken, serialized);
-
+    //std::cout << "Before S" << std::endl;
     serialized = _serializeHeaders();
+    //std::cout << "SERIALIZE:::::::::" << serialized << std::endl;
 
     return serialized;
 }
@@ -145,50 +146,6 @@ void Message::setOwnerId(const std::string &ownerId) {
     _ownerId = ownerId;
     addHeader(OwnerIdToken, _ownerId);
 }
-
-//void Message::_parseMessage(std::string serialized, std::string &ownerId, ReplyType &reply, RPC &rpc, MessageType &type, int &size, time_t &timestamp, std::string &encodedMsg) {
-//    std::stringstream ss(serialized);
-//    std::string token;
-
-//    while (ss >> token) {
-
-//        if (token == SizeToken) {
-
-//            ss >> size;
-
-//        } else if (token == MessageToken) {
-
-//            ss >> encodedMsg;
-
-//        } else if (token == MessageTypeToken) {
-
-//            int msgType;
-//            ss >> msgType;
-//            type = (MessageType) msgType;
-
-//        } else if (token == TimestampToken) {
-
-//            ss >> timestamp;
-
-//        } else if (token == RPCToken) {
-
-//            int rpcId;
-//            ss >> rpcId;
-//            rpc = (RPC) rpcId;
-
-//        } else if (token == ReplyTypeToken) {
-
-//            int replyType;
-//            ss >> replyType;
-//            reply = (ReplyType)replyType;
-
-//        } else if (token == OwnerIdToken) {
-
-//            ss >> ownerId;
-
-//        }
-//    }
-//}
 
 void Message::_parseMessage(std::string serialized, std::string &encodedMsg, HeadersMap &headers) {
 
@@ -260,8 +217,11 @@ std::string Message::_serializeHeaders() {
     std::map<std::string, std::string>::iterator it;
 
 
-    for (it = _headers.begin(); it != _headers.end(); it++) {
+    for (it = _headers.begin(); it != _headers.end(); ++it) {
         serialized += it -> first + " " + it -> second + " ";
+        /*std::cout << "H: " << it->first << std::endl;
+        std::cout << "V: " << it->second << std::endl;
+        std::cout << "S: " << serialized << std::endl;*/
     }
 
     return serialized;
@@ -301,6 +261,11 @@ void Message::setReplyType(const ReplyType &replyType) {
 }
 
 void Message::addHeader(std::string key, std::string value) {
+    //std::cout << "Setting k: " << key << ", " << "v: " << value << std::endl;
+    if(key.size() == 0 || value.size() == 0 || key[0] == ' ' || value[0] == ' ') {
+        std::cout << "Ignoring empty key/value" << std::endl;
+        return;
+    }
     _headers[key] = value;
 }
 

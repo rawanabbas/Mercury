@@ -11,7 +11,7 @@ ConnectionManager::ConnectionManager(std::string ownerId, std::string username, 
     _queryMessage.addHeader(Message::OwnerIdToken, ownerId);
 
     pthread_mutex_init(&_peerMutex, NULL);
-    setMutex(_peerMutex);
+    setMutex(&_peerMutex);
     _mStatus = ManagerStatus::FetchingPeers;
 }
 
@@ -127,7 +127,7 @@ void ConnectionManager::run() {
                         emit peersUpdated();
 
                     } else {
-
+                        std::cout << (int)result.getMessageType() << std::endl;
                         std::cerr << "Undefined response." << std::endl;
                         _mStatus = ManagerStatus::Error;
 

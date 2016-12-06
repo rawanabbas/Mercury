@@ -23,7 +23,7 @@ Server::Server(std::string ownerId, std::string username, int port) : Thread(), 
 
     }
 
-    setMutex(_filesMutex);
+    setMutex(&_filesMutex);
 
     _isRunning = true;
 }
@@ -123,6 +123,10 @@ void Server::addFileRecepient(std::string username, std::string filename) {
 
     _files[username].push_back(filename);
 
+}
+
+FilesMap &Server::getPendingFiles() {
+    return _files;
 }
 
 void * Server::_callbackWrapper(Thread *thread, void *parent) {

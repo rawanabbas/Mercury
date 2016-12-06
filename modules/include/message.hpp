@@ -13,21 +13,22 @@
 #include "decoder.hpp"
 
 enum class MessageType {
-    Request,
-    Reply,
-    Ping,
-    Pong,
-    Info,
-    Exit,
-    EstablishConnection,
-    Authenticate,
-    Authenticated,
-    Unauthorized,
-    Register,
-    Query,
-    QueryAll,
-    Result,
-    EndFile,
+    Request = 0,
+    Reply = 1,
+    Ping = 2,
+    Pong = 3,
+    Info = 4,
+    Exit = 5,
+    EstablishConnection = 6,
+    Authenticate = 7,
+    Authenticated = 8,
+    Unauthorized = 9,
+    Register = 10,
+    Query = 11,
+    QueryAll = 12,
+    Result = 13,
+    EndFile = 14,
+    SendFile = 15,
     Undefined = -1
 };
 

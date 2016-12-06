@@ -7,7 +7,7 @@
  */
 #include "thread.hpp"
 
-Thread::Thread() : _isRunning(false), _isPending(true), _doneCallback(NULL) {
+Thread::Thread() : _isRunning(false), _isPending(true), _doneCallback(NULL), _mutex(nullptr) {
 
 }
 
@@ -19,11 +19,12 @@ void Thread::start() {
 }
 
 
-pthread_mutex_t Thread::getMutex() const {
+pthread_mutex_t *Thread::getMutex() const {
     return _mutex;
 }
 
-void Thread::setMutex(pthread_mutex_t mutex) {
+void Thread::setMutex(pthread_mutex_t *mutex) {
+    std::cout << "setMutex " << (mutex == nullptr) << std::endl;
     _mutex = mutex;
 }
 
@@ -64,11 +65,16 @@ bool Thread::isRunning() {
 }
 
 int Thread::lock() {
-    return pthread_mutex_lock(&_mutex);
+    std::cout << "lock" << std::endl;
+    if (_mutex == nullptr) {
+        std::cout << "!!!!!!!" << std::endl;
+        throw "Locking null mutex";
+    }
+    return pthread_mutex_lock(_mutex);
 }
 
 int Thread::release() {
-    return pthread_mutex_unlock(&_mutex);
+    return pthread_mutex_unlock(_mutex);
 }
 
 void Thread::lock(pthread_mutex_t mutex) {

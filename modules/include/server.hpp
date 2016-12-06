@@ -49,6 +49,7 @@ public:
     char * readBuffer(int start = 0, int end = MAX_RECV);
 
     void addFileRecepient(std::string username, std::string filename);
+    FilesMap &getPendingFiles();
 
     virtual ~Server ();
 };

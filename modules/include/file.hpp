@@ -58,7 +58,7 @@ public:
     FileStatus ropen(std::string ownerId, std::string username, std::string path, FileMode mode, UDPSocket server);
 
     std::string read();
-    FileStatus rread(std::string ownerId, std::string username, UDPSocket server);
+    std::string rread(std::string ownerId, std::string username, UDPSocket server);
 
     FileStatus write(std::string str);
     FileStatus write(std::string str, unsigned int length);

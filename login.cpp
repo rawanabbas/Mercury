@@ -11,24 +11,26 @@ Login::Login(QWidget *parent) :
 
     self = this;
 
-    _client = Client("127.0.0.1", 3010);
-    _client.start();
+    _client = new Client("127.0.0.1", 3010);
+    _client->start();
 
 }
 
 Login::~Login() {
     delete ui;
-    _client.join();
-
+    _client->join();
+    delete _client;
+    std::cout << "Deleted" << std::endl;
 }
 
 void Login::on_loginBtn_clicked() {
 
-    _client.addArgument(ui->usrnameInput->text().toStdString());
-    _client.addArgument(ui->pwdInput->text().toStdString());
+    std::cout << "USERNAME: " << ui->usrnameInput->text().toStdString() << std::endl;
+    _client->addArgument(ui->usrnameInput->text().toStdString());
+    _client->addArgument(ui->pwdInput->text().toStdString());
 
 
-    _client.setCommand(std::string(1, (char)Commands::SignIn), [=](void* client)  {
+    _client->setCommand(std::string(1, (char)Commands::SignIn), [=](void* client)  {
 
         if (((Client*) client) -> getStatus() == ClientStatus::Authenticated || ((Client *)client)->isAuthenticated()) {
 
@@ -55,10 +57,10 @@ void Login::on_loginBtn_clicked() {
 
 void Login::on_registerBtn_clicked() {
 
-    _client.addArgument(ui->usrnameInput->text().toStdString());
-    _client.addArgument(ui->pwdInput->text().toStdString());
+    _client->addArgument(ui->usrnameInput->text().toStdString());
+    _client->addArgument(ui->pwdInput->text().toStdString());
 
-    _client.setCommand(std::string(1, (char)Commands::Register), [&](void* client)  {
+    _client->setCommand(std::string(1, (char)Commands::Register), [&](void* client)  {
 
         if (((Client*) client) -> getStatus() == ClientStatus::Authenticated) {
 

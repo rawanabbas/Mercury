@@ -3,12 +3,14 @@
 
 ImageViewer::ImageViewer(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::ImageViewer)
-{
+    ui(new Ui::ImageViewer) {
     ui->setupUi(this);
 }
 
-ImageViewer::~ImageViewer()
-{
+ImageViewer::~ImageViewer() {
     delete ui;
+}
+
+void ImageViewer::setImage(QString imagePath) {
+    ui->label->setPixmap(QPixmap(imagePath));
 }

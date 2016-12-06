@@ -177,30 +177,12 @@
             </font>
            </property>
            <property name="text">
-            <string>Local Images</string>
+            <string>My Images</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QTableWidget" name="localImages"/>
-         </item>
-         <item>
-          <widget class="QLabel" name="label_6">
-           <property name="font">
-            <font>
-             <family>Century Schoolbook L</family>
-             <pointsize>12</pointsize>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>Remote Images</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QTableWidget" name="remoteImages"/>
+          <widget class="QListWidget" name="localImages"/>
          </item>
         </layout>
        </item>

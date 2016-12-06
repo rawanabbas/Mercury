@@ -16,7 +16,7 @@ PeerServer::PeerServer(int port) {
 
     }
 
-    setMutex(_peersMutex);
+    setMutex(&_peersMutex);
 
     _isRunning = true;
 }
@@ -83,7 +83,7 @@ void PeerServer::_spawnTracker(UDPSocket clientSocket, User *user) {
     Tracker *tracker = new Tracker(clientSocket, user, &_peers, &_allPeers);
     tracker -> setParent((void *)this);
     tracker -> setDoneCallback(_callbackWrapper, (void *)this);
-    tracker -> setMutex(_peersMutex);
+    tracker -> setMutex(&_peersMutex);
     tracker -> start();
 
     _trackers.push_back(tracker);

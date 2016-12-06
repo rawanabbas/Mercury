@@ -40,7 +40,7 @@ signals:
 
 private:
 
-    Client _client;
+    Client *_client;
 
     std::string _username;
     std::string _id;

@@ -15,6 +15,7 @@
         <file>build/upload.png</file>
         <file>build/image.png</file>
         <file>build/image-small.png</file>
+        <file>build/download-icon.png</file>
     </qresource>
     <qresource prefix="/status">
         <file>build/offline-dot-small.png</file>

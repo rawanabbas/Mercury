@@ -14,12 +14,12 @@
 #include "thread.hpp"
 #include "message.hpp"
 #include "file.hpp"
+#include "client.hpp"
 
 typedef std::map<std::string, std::vector<std::string> > FilesMap;
 typedef std::map<FileDescriptor, File* > FileDescriptorMap;
 
 enum class JobState {
-
     Running,
     Exit
 };

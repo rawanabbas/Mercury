@@ -371,11 +371,9 @@ std::string File::read() {
     return std::string(buffer, size);
 }
 
-FileStatus File::rread(std::string ownerId, std::string username, UDPSocket server) {
+std::string File::rread(std::string ownerId, std::string username, UDPSocket server) {
 
     std::cout << "Remote Read.." << std::endl;
-
-//    std::string str = _name + " FM: " + std::to_string((int)FileMode::ReadOnly) + " FD: " + std::to_string(_fd);
 
     Message message(ownerId, username, "Read", MessageType::Request, RPC::ReadFile);
     message.addHeader(Message::FileNameToken, _name);
@@ -385,7 +383,7 @@ FileStatus File::rread(std::string ownerId, std::string username, UDPSocket serv
     if (!_sock.sendMessageTo(server, message)) {
 
         _status = FileStatus::ReadOperationFailed;
-        return _status;
+        return "";
 
     } else {
 
@@ -396,7 +394,7 @@ FileStatus File::rread(std::string ownerId, std::string username, UDPSocket serv
 
             std::cout << "recvFrom Failed!" << std::endl;
             _status = FileStatus::ReadOperationFailed;
-            return _status;
+            return "";
 
         } else {
 
@@ -406,12 +404,12 @@ FileStatus File::rread(std::string ownerId, std::string username, UDPSocket serv
 
                 _status = FileStatus::ReadOperationSuccess;
 
-                return _status;
+                return message.getMessage();
 
             } else {
 
                 _status = FileStatus::ReadOperationFailed;
-                return _status;
+                return "";
 
             }
         }

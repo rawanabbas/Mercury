@@ -421,22 +421,23 @@ compiler_rcc_make_all: qrc_images.cpp
 compiler_rcc_clean:
 	-$(DEL_FILE) qrc_images.cpp
 qrc_images.cpp: ../images.qrc \
-		../cover.jpg \
-		logo-1.png \
-		mercury.ico \
-		logo-big.png \
 		logo-medium.png \
+		logo-big.png \
+		mercury.ico \
+		logo-1.png \
 		online-dot-small.png \
 		offline-dot-small.png \
-		logo.png \
-		login-small-dialog.png \
 		image-small.png \
-		login-medium.png \
+		login-small-dialog.png \
 		cloud-users.png \
-		image.png \
-		login.png \
+		upload.png \
+		login-medium.png \
+		logo.png \
 		login-dialog.png \
-		upload.png
+		image.png \
+		download-icon.png \
+		login.png \
+		../cover.jpg
 	/usr/lib/x86_64-linux-gnu/qt5/bin/rcc -name images ../images.qrc -o qrc_images.cpp
 
 compiler_moc_header_make_all: moc_mainwindow.cpp moc_connection_manager.cpp moc_login.cpp moc_upload.cpp moc_imageviewer.cpp

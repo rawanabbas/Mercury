@@ -22,6 +22,7 @@ enum class Commands : char {
     WriteFile = 'w',
     OpenFile = 'o',
     CreateFile = 'c',
+    RecieveFile = 'v',
     Text = 't',
     Register = 'g',
     SignIn = 'a',
@@ -71,8 +72,10 @@ private:
 
     void _readFile();
     void _sendFile();
+    void _recieveFile();
     void _writeFile();
     void _openFile();
+
 
 protected:
 
@@ -90,6 +93,7 @@ protected:
     std::string _ownerId;
 
     std::map<FileDescriptor, File*> _files;
+    std::map<std::string, File*> _localFiles;
 
     void _updateServerSocket(int port, std::string host);
 

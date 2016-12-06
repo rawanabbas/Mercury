@@ -55,6 +55,7 @@ bool UDPSocket::sendMessageTo(UDPSocket &sock, Message message) {
 }
 
 int UDPSocket::recvFrom(UDPSocket &sock, std::string &msg) {
+
     socklen_t s = sizeof(sock._address);
 
     if ((_bytes = ::recvfrom(_sock, _buffer, MAX_RECV, 0, (sockaddr *) &(sock._address),  &s)) <= 0) {

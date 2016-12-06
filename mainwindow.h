@@ -20,6 +20,7 @@
 
 #include "login.hpp"
 #include "upload.hpp"
+#include "imageviewer.hpp"
 
 
 typedef std::map<std::string, Client*> ClientMap;
@@ -57,12 +58,15 @@ public slots:
 private slots:
 
     void on_uploadBtn_clicked();
-
+    void checkPendingFiles();
+    void refreshFiles();
+    void openImage(QModelIndex index);
 private:
 
     Ui::MainWindow *ui;
     Login *_login;
     Upload *_upload;
+    ImageViewer *_viewer;
 
     //Middleware
     Server *_server;
@@ -78,12 +82,15 @@ private:
     std::vector<Peer*> _peers;
     PeerMap _onlinePeers;
 
+    QDir _current;
 
     bool flag;
 
     void _setupPeerTable();
     void _queryOnlinePeers();
     void _updatePeerTable(std::vector<Peer*> peers);
+    void _uploadImageToClient(std::string userId);
+
 };
 
 #endif // MAINWINDOW_H

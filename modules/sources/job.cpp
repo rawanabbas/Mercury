@@ -18,7 +18,7 @@ int Job::_id = 0;
 Job::Job(std::string ownerId, std::string username, UDPSocket sock, FilesMap *files, pthread_mutex_t filesMutex)
     : _clientSocket(sock), _ownerId(ownerId), _username(username), _fileRecipients(files), _filesMutex(filesMutex), Thread() {
 
-    setMutex(_filesMutex);
+    setMutex(&_filesMutex);
 
     _id++;
 }
@@ -63,7 +63,6 @@ void Job::_openFile(Message message) {
 
 void Job::_createFile(Message &message) {
 
-    std::cout << "Serialized Message: " << message.serialize() << std::endl;
     File *file = new File;
 
     file->setMode((FileMode) std::stoi(message.getHeader(Message::FileModeToken)));
@@ -270,6 +269,61 @@ JobState Job::_handleMessage(Message message) {
         message.addHeader(Message::UsernameToken, _username);
         std::cout << filenames << std::endl;
         std::cout << "------------------------QUERY-------------------------" << std::endl;
+    } else if (message.getMessageType() == MessageType::SendFile) {
+
+        /*std::vector<int> indicies = _upload->selectedPeers();
+        image = _upload->image();
+        views = _upload->views();
+
+
+        for (unsigned int i = 0; i < indicies.size(); ++i) {
+
+            std::string username = _peers[indicies[i]]->getUsername();
+            std::string userId = _peers[indicies[i]]->getUserID();
+
+            if (_manager->isPeerOnline(userId)) {
+
+                Client *client;
+
+                if (_clients.count(username) != 0) {
+
+                    client = _clients[username];
+
+                } else {
+
+                    client = new Client(_id, _username, _onlinePeers[userId]->getIP(), 3001);
+
+                }
+
+                client->start();
+
+                client->setCommand(std::string(1, (char)Commands::EstablishConnection), [=](void *client) {
+
+                    ((Client *) client)->setCommand(std::string(1, (char)Commands::File), [=](void *client) {
+
+                        qDebug() << "Sending File!";
+
+    //                    Steganography::embedImage("cover.jpg", image, std::to_string(views), image, ((Client *) client)->getOwnerId());
+
+                        ((Client *) client)->addArgument(image);
+
+                        ((Client *) client)->setCommand(std::string(1, (char)Commands::SendFile), [=](void *client) {
+
+                            qDebug() << "file sent!";
+                            ((Client *) client)->join();
+
+                        });
+
+                    });
+                });
+
+            } else {
+                qDebug() << "User is offline adding it to the cache!";
+                _server->addFileRecepient(username, image);
+
+            }
+
+        }*/
     }
 
     message.setMessageType(type);

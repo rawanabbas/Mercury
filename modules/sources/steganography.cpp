@@ -16,10 +16,12 @@ bool Steganography::_embedData(std::string file, std::string data, std::string s
     write(fd, data.c_str(), data.size());
     close(fd);
 
-    std::string command = SteganographyCommand + " embed -ef " + views + " -cf " + file + " -p " + secret;
+    std::string command = SteganographyCommand + " embed -ef " + views + " -cf " + file + " -p " + secret + " --force";
+    std::cout << command << std::endl;
+
 
     if (system(command.c_str()) != -1) {
-
+        unlink(views.c_str());
         std::cout << "Data is now hidded!" << std::endl;
         return true;
 
@@ -35,7 +37,7 @@ bool Steganography::_embedData(std::string file, std::string data, std::string s
 
 bool Steganography::_extractData(std::string src, std::string destination, std::string secret) {
 
-    std::string command = SteganographyCommand + " extract -sf " + src + " -xf " + destination + " -p " + secret;
+    std::string command = SteganographyCommand + " extract -sf " + src + " -xf " + destination + " -p " + secret + " --force";
 
     if (system(command.c_str()) != -1) {
 
@@ -52,13 +54,13 @@ bool Steganography::_extractData(std::string src, std::string destination, std::
 }
 
 
-bool Steganography::embedImage(std::string original, std::string secretImage, std::string data, std::string &destination, std::string secret) {
+bool Steganography::embedImage(std::string original, std::string secretImage, std::string data, std::string destination, std::string secret) {
 
 
-    if(_embedData(original, data, secret)) {
+    if(_embedData(secretImage, data, secret)) {
 
-        std::string command = SteganographyCommand + " embed -ef " + secretImage + " -cf " + original + " -p " + secret + " -sf " + destination;
-
+        std::string command = SteganographyCommand + " embed -ef " + secretImage + " -cf " + original + " -p " + secret + " -sf " + destination + " --force";
+        std::cout << command << std::endl;
         if (system(command.c_str()) != -1) {
 
             std::cout << "The data is now available at " << destination << std::endl;
@@ -78,9 +80,11 @@ bool Steganography::embedImage(std::string original, std::string secretImage, st
 
 }
 
-bool Steganography::extractImage(std::string src, std::string &destination, std::string secret) {
+bool Steganography::extractImage(std::string src, std::string destination, std::string secret) {
 
-    std::string command = SteganographyCommand + " extract -sf " + src + " -xf " + destination + " -p " + secret;
+    std::string command = SteganographyCommand + " extract -sf " + src + " -xf " + destination + " -p " + secret + " --force";
+    std::cout << command << std::endl;
+
 
     if(system(command.c_str()) != -1) {
 
@@ -101,12 +105,12 @@ bool Steganography::incrementViews(std::string image, std::string secret) {
 
     //TODO
 
-    if (extractImage(image, image, secret)) {
+    if (extractImage(image, "temp.jpg", secret)) {
 
-        if (_extractData("secret.jpg", "views.txt", secret)) {
+        if (_extractData("temp.jpg", "views.txt", secret)) {
 
             std::ifstream viewsFile("views.txt");
-            
+
             if (viewsFile.is_open()) {
 
                 std::string user;
@@ -118,14 +122,16 @@ bool Steganography::incrementViews(std::string image, std::string secret) {
 
                 viewsFile.close();
 
-                std::ofstream updatedViewsFile("views.txt");
+                /*std::ofstream updatedViewsFile("views.txt");
 
                 if (updatedViewsFile.is_open()) {
                     updatedViewsFile << views;
-                }
+                }*/
 
-                return embedImage(image, "secret.jpg", "views.txt", image, secret);
-
+               int rc  = embedImage(image, "temp.jpg", std::to_string(views), image, secret);
+               unlink("views.txt");
+               unlink("temp.jpg");
+               return rc;
             } else {
 
                 std::cerr << "Cannot edit views!" << std::endl;
@@ -145,9 +151,9 @@ bool Steganography::incrementViews(std::string image, std::string secret) {
 
 bool Steganography::decrementViews(std::string image, std::string secret) {
 
-    if (extractImage(image, image, secret)) {
+    if (extractImage(image, "temp.jpg", secret)) {
 
-        if (_extractData(image, "views.txt", secret)) {
+        if (_extractData("temp.jpg", "views.txt", secret)) {
 
             std::ifstream viewsFile("views.txt");
 
@@ -158,18 +164,22 @@ bool Steganography::decrementViews(std::string image, std::string secret) {
                 std::streampos pos;
                 //TO-DO: KEFAYA EL RAQAM.
                 viewsFile >> views;
-                views++;
+                views--;
 
                 viewsFile.close();
 
-                std::ofstream updatedViewsFile("views.txt");
+                /*std::ofstream updatedViewsFile("views.txt");
 
                 if (updatedViewsFile.is_open()) {
                     updatedViewsFile << views;
-                }
+                }*/
 
-               return embedImage(image, "secret.jpg", "views.txt", image, secret);
-
+               int rc  = embedImage(image, "temp.jpg", std::to_string(views), image, secret);
+               unlink("views.txt");
+               unlink("temp.jpg");
+               if (views == 0)
+                   unlink(image.c_str());
+               return rc;
             } else {
 
                 std::cerr << "Cannot edit views!" << std::endl;

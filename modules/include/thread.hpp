@@ -20,7 +20,7 @@ private:
     pthread_t _thread;
     bool _isPending;
 
-    pthread_mutex_t _mutex;
+    pthread_mutex_t *_mutex;
 
     ThreadCallback _doneCallback;
     static void* _run(void *);
@@ -48,8 +48,8 @@ public:
 
     void exit();
 
-    pthread_mutex_t getMutex() const;
-    void setMutex(pthread_mutex_t mutex);
+    pthread_mutex_t *getMutex() const;
+    void setMutex(pthread_mutex_t *mutex);
 
     void setDoneCallback(ThreadCallback, void * parent = NULL);
     void setParent(void *parent);

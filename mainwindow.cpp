@@ -55,8 +55,8 @@ void MainWindow::display() {
     _login->close();
 
     _server = new Server(getId(), getUsername(), 3001);
-    _heartbeat = new Heartbeat(getId(), getUsername(), "127.0.0.1", 3010);
-    _manager = new ConnectionManager(getId(), getUsername(), "127.0.0.1", 3010);
+    _heartbeat = new Heartbeat(getId(), getUsername(), "10.7.57.133", 3010);
+    _manager = new ConnectionManager(getId(), getUsername(), "10.7.57.133", 3010);
 
     _server->start();
     _heartbeat->start();
@@ -170,20 +170,20 @@ void MainWindow::_queryOnlinePeers() {
     }
 
 
-    QTableWidget *remoteImages = ui->remoteImages;
-    int row = 0;
+    //    QTableWidget *remoteImages = ui->remoteImages;
+    //    int row = 0;
 
-    for (size_t i = 0; i < pendingRemoteFiles.size(); ++i) {
+    //    for (size_t i = 0; i < pendingRemoteFiles.size(); ++i) {
 
-        for (size_t j = 0; j < pendingRemoteFiles[i].size(); ++j) {
+    //        for (size_t j = 0; j < pendingRemoteFiles[i].size(); ++j) {
 
-            remoteImages->setRowCount(row + 1);
-            remoteImages->setItem(row, 0, new QTableWidgetItem(QString::fromStdString(pendingRemoteFiles[i][j])));
-            row++;
+    //            remoteImages->setRowCount(row + 1);
+    //            remoteImages->setItem(row, 0, new QTableWidgetItem(QString::fromStdString(pendingRemoteFiles[i][j])));
+    //            row++;
 
-        }
+    //        }
 
-    }
+    //    }
 
 
 }
@@ -218,13 +218,16 @@ void MainWindow::_uploadImageToClient(std::string userId) {
 
     } else {
         client = new Client(_id, _username, _onlinePeers[userId]->getIP(), 3001);
-        //client = new Client(_id, _username, "10.7.57.35", 3001);
+        //client = new Client(_id, _username, "10.", 3001);
 
     }
+
     std::string newImage = image + "_steg.jpg";
-    Steganography::embedImage("cover.jpg", image, std::to_string(views), newImage, "123456");
-    image = newImage;
-    std::cout << "ImagePath: " << image << std::endl;
+    if (Steganography::embedImage("cover.jpg", image, std::to_string(views), newImage, "123456")) {
+
+        image = newImage;
+
+    }
 
     client->start();
 
@@ -232,9 +235,12 @@ void MainWindow::_uploadImageToClient(std::string userId) {
 
         ((Client *) client)->setCommand(std::string(1, (char)Commands::File), [=](void *client) {
 
+
+            std::cout << "ImagePath: " << image << std::endl;
+
             qDebug() << "Sending File!";
 
-//                    Steganography::embedImage("cover.jpg", image, std::to_string(views), image, ((Client *) client)->getOwnerId());
+            //                    Steganography::embedImage("cover.jpg", image, std::to_string(views), image, ((Client *) client)->getOwnerId());
 
             ((Client *) client)->addArgument(image);
 

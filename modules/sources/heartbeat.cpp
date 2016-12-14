@@ -34,7 +34,7 @@ Heartbeat::Heartbeat(std::string ownerId, std::string username, std::string host
 }
 
 bool Heartbeat::_establishConnection() {
-
+    _updateServerSocket(3010, this->getHost());
     Message eMessage(getOwnerId(), getUsername(), "Establish!", MessageType::EstablishConnection);
 
     while(_retry > 0) {
@@ -87,45 +87,51 @@ bool Heartbeat::_establishConnection() {
 }
 
 void Heartbeat::run() {
+    int connectionRetires = 0;
+    int maxConnectionRetires = 100;
 
-    if (_establishConnection()) {
+    while (connectionRetires < maxConnectionRetires) {
+        std::cout << "Attempting to connect." << std::endl;
+        _retry = 3;
+        if (_establishConnection()) {
 
-        while(_retry > 0) {
+            while(_retry > 0) {
 
-            Message pingMessage(getOwnerId(), getUsername(), "Ping", MessageType::Ping);
+                Message pingMessage(getOwnerId(), getUsername(), "Ping", MessageType::Ping);
 
-            if (!_sendMessage(pingMessage)) {
+                if (!_sendMessage(pingMessage)) {
 
-                perror("Cannot Send Message!");
-                _retry--;
-
-            } else {
-
-
-                std::string msg;
-
-                int r;
-
-                while (((r = _receiveWithTimeout(msg, 5)) == -1) && (_retry > 0)) {
-                    std::cout << "Cannot recieve retrying!" << std::endl;
+                    perror("Cannot Send Message!");
                     _retry--;
+
+                } else {
+
+
+                    std::string msg;
+
+                    int r;
+
+                    while (((r = _receiveWithTimeout(msg, 2)) == -1) && (_retry > 0)) {
+                        std::cout << "Cannot recieve retrying!" << std::endl;
+                        _retry--;
+                    }
+
+                    if (r == -1 && _retry == 0) {
+
+                        perror("Cannot Recieve Message!");
+                        break;
+
+                    }
+
                 }
 
-                if (r == -1 && _retry == 0) {
 
-                    perror("Cannot Recieve Message!");
-                    break;
-
-                }
+                _resetTrials();
+                _wait(2);
 
             }
 
-
-            _resetTrials();
-            _wait(2);
-
         }
-
     }
 
     std::cout << "Heartbeat Stopped, Server " << _sock.getHost() << ":" << _sock.getPortNumber() << " is unreachable" << std::endl;

@@ -324,6 +324,8 @@ void Client::_sendFile() {
     std::cout << "------------------------";
     std::cout << "Sending File.....";
     std::cout << "------------------------";
+    int maxRetries = 10;
+    int retry = 0;
 
     if (_argc < 1) {
 

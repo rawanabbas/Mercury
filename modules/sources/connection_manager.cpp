@@ -51,6 +51,7 @@ void ConnectionManager::_fetchAllPeers() {
             std::cerr << "Cannot fetch all peers!" << std::endl;
 
         } else {
+            _allPeers.clear();
 
             allPeers = Message::deserialize(peers);
 
@@ -90,46 +91,57 @@ void ConnectionManager::_fetchAllPeers() {
 
 void ConnectionManager::run() {
 
-    if (!_establishConnection()) {
+    int connectionRetires = 0;
+    int maxConnectionRetires = 100;
 
-        std::cerr << "Cannot connect to the peering server!" << std::endl;
+    while (connectionRetires < maxConnectionRetires) {
+        std::cout << "Attempting to connect (CM)." << std::endl;
+        _retry = 3;
 
-    } else {
+        if (!_establishConnection()) {
 
-        _fetchAllPeers();
+            std::cerr << "Cannot connect to the peering server!" << std::endl;
 
-        while(true) {
+        } else {
+
+            _fetchAllPeers();
+
+            while(_retry > 0) {
 
 
-            if (!_sendMessage(_queryMessage)) {
+                if (!_sendMessage(_queryMessage)) {
 
-                perror("Cannot Send Query!");
-                continue;
-
-            } else {
-
-                std::string info;
-                if (_receiveWithTimeout(info, 5) == -1) {
-
-                    perror("TimedOut!");
+                    perror("Cannot Send Query!");
                     continue;
 
                 } else {
 
-                    Message result = Message::deserialize(info);
+                    std::string info;
+                    if (_receiveWithTimeout(info, 2) == -1) {
 
-                    if (result.getMessageType() == MessageType::Result) {
-
-                        _parsePeerList(result.getMessage());
-
-                        _mStatus = ManagerStatus::FetcheedPeers;
-
-                        emit peersUpdated();
+                        perror("TimedOut!");
+                        _retry--;
+                        break;
 
                     } else {
-                        std::cout << (int)result.getMessageType() << std::endl;
-                        std::cerr << "Undefined response." << std::endl;
-                        _mStatus = ManagerStatus::Error;
+
+                        Message result = Message::deserialize(info);
+
+                        if (result.getMessageType() == MessageType::Result) {
+
+                            _parsePeerList(result.getMessage());
+
+                            _mStatus = ManagerStatus::FetcheedPeers;
+
+                            emit peersUpdated();
+
+                        } else {
+                            std::cout << (int)result.getMessageType() << std::endl;
+                            std::cerr << "Undefined response." << std::endl;
+                            _mStatus = ManagerStatus::Error;
+
+
+                        }
 
 
                     }
@@ -138,12 +150,10 @@ void ConnectionManager::run() {
                 }
 
 
+                _resetTrials();
+                _wait(5);
+
             }
-
-
-            _resetTrials();
-            _wait(5);
-
         }
     }
 

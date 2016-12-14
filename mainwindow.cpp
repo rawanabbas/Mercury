@@ -55,8 +55,10 @@ void MainWindow::display() {
     _login->close();
 
     _server = new Server(getId(), getUsername(), 3001);
-    _heartbeat = new Heartbeat(getId(), getUsername(), "10.7.57.133", 3010);
-    _manager = new ConnectionManager(getId(), getUsername(), "10.7.57.133", 3010);
+    //_heartbeat = new Heartbeat(getId(), getUsername(), "10.7.57.133", 3010);
+    //_manager = new ConnectionManager(getId(), getUsername(), "10.7.57.133", 3010);
+    _heartbeat = new Heartbeat(getId(), getUsername(), "10.7.57.35", 3010);
+    _manager = new ConnectionManager(getId(), getUsername(), "10.7.57.35", 3010);
 
     _server->start();
     _heartbeat->start();
@@ -71,6 +73,7 @@ void MainWindow::display() {
 
 void MainWindow::_updatePeerTable(std::vector<Peer*> peers) {
 
+    ui->peersTable->clear();
     QTableWidgetItem *prototype = new QTableWidgetItem;
     prototype->setTextAlignment(Qt::AlignCenter);
 

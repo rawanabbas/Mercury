@@ -11,7 +11,7 @@ Login::Login(QWidget *parent) :
 
     self = this;
 
-    _client = new Client("10.7.57.133", 3010);
+    _client = new Client("10.7.57.35", 3010);
     _client->start();
 
 }

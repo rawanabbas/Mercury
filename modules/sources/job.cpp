@@ -124,6 +124,10 @@ void Job::_writeFile(Message &message) {
     FileMode mode = (FileMode) std::stoi(message.getHeader(Message::FileModeToken));
     std::string fileName = message.getHeader(Message::FileNameToken);
     std::string bytes = message.getMessage();
+    int size = std::stoi(message.getHeader(Message::SizeToken));
+    if (bytes.size() != size) {
+        std::cout << "-======================================================================================================================" << std::endl;
+    }
 
     //    File::parse(message.getMessage(), fd, fileName, mode, bytes);
 

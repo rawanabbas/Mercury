@@ -18,7 +18,6 @@ Login::Login(QWidget *parent) :
 
 Login::~Login() {
     delete ui;
-    _client->join();
     delete _client;
     std::cout << "Deleted" << std::endl;
 }

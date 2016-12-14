@@ -39,7 +39,7 @@ void ConnectionManager::_fetchAllPeers() {
     Message allPeers(_ownerId, _username, "All", MessageType::QueryAll, RPC::Undefined);
 
     if (!_sendMessage(allPeers)) {
-
+        emit disconnected();
         std::cerr << "Cannot send query message!" << std::endl;
 
     } else {
@@ -49,8 +49,10 @@ void ConnectionManager::_fetchAllPeers() {
         if (_receiveWithTimeout(peers, 5) == -1) {
 
             std::cerr << "Cannot fetch all peers!" << std::endl;
+            emit disconnected();
 
         } else {
+            emit connected();
             _allPeers.clear();
 
             allPeers = Message::deserialize(peers);
@@ -97,9 +99,9 @@ void ConnectionManager::run() {
     while (connectionRetires < maxConnectionRetires) {
         std::cout << "Attempting to connect (CM)." << std::endl;
         _retry = 3;
-
+        emit disconnected();
         if (!_establishConnection()) {
-
+            emit disconnected();
             std::cerr << "Cannot connect to the peering server!" << std::endl;
 
         } else {
@@ -110,21 +112,21 @@ void ConnectionManager::run() {
 
 
                 if (!_sendMessage(_queryMessage)) {
-
+                    emit disconnected();
                     perror("Cannot Send Query!");
                     continue;
 
                 } else {
-
+                    emit connected();
                     std::string info;
                     if (_receiveWithTimeout(info, 2) == -1) {
-
+                        emit disconnected();
                         perror("TimedOut!");
                         _retry--;
                         break;
 
                     } else {
-
+                        emit connected();
                         Message result = Message::deserialize(info);
 
                         if (result.getMessageType() == MessageType::Result) {

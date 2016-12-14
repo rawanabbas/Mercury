@@ -55,6 +55,9 @@ public slots:
     void upload();
     void cancelUpload();
 
+    void heartbeatConnected();
+    void heartbeatDisconnected();
+
 private slots:
 
     void on_uploadBtn_clicked();

@@ -26,13 +26,15 @@ void File::setFd(int fd) {
 bool File::lock() {
     //TODO
     std::cout << "LOCKING.................." << std::endl;
-    return flock(_fd, LOCK_EX) == 0;
+    //return flock(_fd, LOCK_EX) == 0;
+    return true;
 }
 
 bool File::unlock() {
     //TODO
     std::cout << "UNLOCKING.................." << std::endl;
-    return flock(_fd, LOCK_UN) == 0;
+    //return flock(_fd, LOCK_UN) == 0;
+    return true;
 }
 
 void File::parseDetails(std::string details, std::string data) {
@@ -219,7 +221,7 @@ FileStatus File::rcreate(std::string ownerId, std::string username, std::string 
 
         std::string serialized;
 
-        if(_sock.recvFrom(server, serialized) == -1) {
+        if(_sock.recvWithTimeout(server, serialized, 2) == -1) {
 
             _status = FileStatus::CreateOperationFailed;
             return _status;
@@ -516,10 +518,6 @@ FileStatus File::rwrite(std::string ownerId, std::string username, std::string n
 }
 
 FileStatus File::rwrite(std::string ownerId, std::string username, std::string data, UDPSocket server) {
-//    std::string str = "N: " + _name + " FM: " + std::to_string((int)FileMode::ReadOnly) + " L: " +
-//                      std::to_string(txt.length()) + " W: " + txt + " FD: " + std::to_string(_fd);
-//    std::cout << "rWrite: " << _fd << std::endl;
-
     Message message(ownerId, username, data, MessageType::Request, RPC::WriteToFile);
 
     message.addHeader(Message::FileNameToken, _name);
@@ -536,7 +534,7 @@ FileStatus File::rwrite(std::string ownerId, std::string username, std::string d
 
         std::string serialized;
 
-        if(_sock.recvFrom(server, serialized) == -1) {
+        if(_sock.recvWithTimeout(server, serialized, 2) == -1) {
 
             _status = FileStatus::WriteOperationFailed;
             return _status;

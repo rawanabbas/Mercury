@@ -173,6 +173,43 @@ void Client::_ping() {
     }
 }
 
+void Client::_pingWithTimeout(int timeout) {
+    std::cout << "pingwt" << std::endl;
+    std::string serializedMsg = "Ping";
+    MessageType type = MessageType::EstablishConnection;
+    Message message(_ownerId, _username, serializedMsg, type);
+
+    if (!_sendMessage(message)) {
+        std::cout << "Failed" << std::endl;
+        sleep(2);
+        perror("Cannot Send Message.");
+
+    } else {
+
+        std::cout << "Now recieving..." << std::endl;
+
+        if (_receiveWithTimeout(serializedMsg, timeout) != -1) {
+
+            Message message = Message::deserialize(serializedMsg);
+
+            if (message.getMessageType() == MessageType::Info) {
+
+                std::cout << "Updated Server Socket Info: " << message.getMessage() << std::endl;
+                _updateServerSocket(atoi(message.getMessage().c_str()), _serverSocket.getHost());
+
+            } else if (message.getMessageType() == MessageType::Pong) {
+
+                std::cout << "Pong Message -> " << message.getMessage() << " RECIEVED" << std::endl;
+
+            } else {
+
+                std::cout << "Unkown Message Type has been recieved:" << serializedMsg <<" !" << std::endl;
+
+            }
+        }
+    }
+}
+
 int Client::_lock() {
     return lock();
 }
@@ -336,51 +373,71 @@ void Client::_sendFile() {
     } else {
 
         std::string fileName = _argv[0];
+        int fileSendRetries = 0;
+        int fileSendMaxRetries = 1000;
+        while (fileSendRetries < fileSendMaxRetries) {
+            std::cout << "fileSendRetries " << fileSendRetries  << (fileSendRetries > 0) << std::endl;
+            if (fileSendRetries > 0) {
+                std::cout << "Pinging1.." <<std::endl;
+                _updateServerSocket(3001, getHost());
+                std::cout << "Pinging2.." <<std::endl;
+                _pingWithTimeout(20);
+            }
 
-        File *remoteFile = new File;
+            File *remoteFile = new File;
 
-        if(_createFile(remoteFile, basename(strdup(fileName.c_str())))) {
+            std::cout << "Attempting to send the file " << fileSendRetries << std::endl;
+            if(_createFile(remoteFile, basename(strdup(fileName.c_str())))) {
 
-            std::cout << "Mapping File to FD " << remoteFile->getFd() << std::endl;
+                std::cout << "Mapping File to FD " << remoteFile->getFd() << std::endl;
 
-            _files[remoteFile->getFd()] = remoteFile;
+                _files[remoteFile->getFd()] = remoteFile;
 
-            File file;
-            file.setDirectory(dirname(strdup(fileName.c_str())));
+                File file;
+                file.setDirectory(dirname(strdup(fileName.c_str())));
 
-            std::cout << "File-Name: " << fileName << std::endl;
+                std::cout << "File-Name: " << fileName << std::endl;
 
-            FileStatus status = file.open(basename(strdup(fileName.c_str())), FileMode::ReadOnly);
+                FileStatus status = file.open(basename(strdup(fileName.c_str())), FileMode::ReadOnly);
 
-            std::cout << (int) status << std::endl;
+                std::cout << (int) status << std::endl;
 
-            std::string buffer;
+                std::string buffer;
 
-            while (!file.isEOF()) {
 
-                buffer = file.read();
+                while (!file.isEOF()) {
 
-                std::cout << "Buffer Size: " << buffer.length() << std::endl;
+                    buffer = file.read();
 
-                status = remoteFile->rwrite(_ownerId, _username, basename(strdup(fileName.c_str())), buffer, _serverSocket);
+                    std::cout << "Buffer Size: " << buffer.length() << std::endl;
+                    status = FileStatus::WriteOperationFailed;
 
-                if (status != FileStatus::WriteOperationSuccess) {
+                    status = remoteFile->rwrite(_ownerId, _username, basename(strdup(fileName.c_str())), buffer, _serverSocket);
 
-                    std::cout << "Couldn't send file!" << std::endl;
+                    if (status != FileStatus::WriteOperationSuccess) {
+
+                        std::cout << "Retrying to send the packet.." << fileSendRetries << std::endl;
+                        fileSendRetries++;
+                        break;
+                    }
+                }
+                file.close();
+
+                if (status == FileStatus::WriteOperationSuccess) {
+
+                    std::cout << "File is sent!" << std::endl;
                     break;
 
+                } else {
+                    std::cout << "Failed to send the file!!" << std::endl;
+                    fileSendRetries++;
                 }
+            } else {
+
+                std::cout << "Couldn't send file!" << std::endl;
+                fileSendRetries++;
+
             }
-
-            if (status == FileStatus::WriteOperationSuccess) {
-
-                std::cout << "File is sent!" << std::endl;
-
-            }
-
-        } else {
-
-            std::cout << "Couldn't send file!" << std::endl;
 
         }
 

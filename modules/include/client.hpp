@@ -105,6 +105,8 @@ protected:
 
     void _exit(std::string msg);
     void _ping();
+    void _pingWithTimeout(int timeout);
+
 
     void _register();
     void _authenticate();

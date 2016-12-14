@@ -59,6 +59,9 @@ void MainWindow::display() {
     //_manager = new ConnectionManager(getId(), getUsername(), "10.7.57.133", 3010);
     _heartbeat = new Heartbeat(getId(), getUsername(), "10.7.57.35", 3010);
     _manager = new ConnectionManager(getId(), getUsername(), "10.7.57.35", 3010);
+    connect(_manager, SIGNAL(connected()), this, SLOT(heartbeatConnected()));
+    connect(_manager, SIGNAL(disconnected()), this, SLOT(heartbeatDisconnected()));
+
 
     _server->start();
     _heartbeat->start();
@@ -289,6 +292,14 @@ void MainWindow::cancelUpload() {
 
 }
 
+void MainWindow::heartbeatConnected() {
+    this->statusBar()->showMessage("Connected to peering server.");
+}
+
+void MainWindow::heartbeatDisconnected() {
+    this->statusBar()->showMessage("Disconnected from peering server.");
+}
+
 
 std::string MainWindow::getUsername() const {
     return _username;
@@ -335,6 +346,8 @@ MainWindow::~MainWindow() {
 
 void MainWindow::checkPendingFiles() {
     FilesMap &pendingFiles = _server->getPendingFiles();
+    if(!pendingFiles.size())
+        return;
     for (auto it = pendingFiles.begin(); it != pendingFiles.end(); ++it) {
         std::string userId = it->first;
         if (_manager->isPeerOnline(userId)) {

@@ -60,6 +60,9 @@ public:
     void setAllPeers(const std::vector<Peer *> &allPeers);
 
     virtual ~ConnectionManager();
+signals:
+    void disconnected();
+    void connected();
 };
 
 #endif //CONNECTION_MANAGER_HPP
